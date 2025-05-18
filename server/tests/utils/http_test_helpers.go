@@ -154,3 +154,10 @@ func TestJSONResponse(t *testing.T, resp *http.Response, expectedStatus int, exp
 
 	assert.Equal(t, expected, result, "JSON response does not match expected JSON")
 }
+
+// ReadResponseBody reads the body of an HTTP response and returns it as a string
+func ReadResponseBody(t *testing.T, resp *http.Response) string {
+	body, err := io.ReadAll(resp.Body)
+	assert.NoError(t, err, "Error reading response body: %v", err)
+	return string(body)
+}
