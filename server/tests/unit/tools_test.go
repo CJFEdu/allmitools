@@ -266,3 +266,106 @@ func TestGetDateComponent(t *testing.T) {
 		})
 	}
 }
+
+// TestTextFileValidation tests the validation of text file parameters
+func TestTextFileValidation(t *testing.T) {
+	// Test cases for parameter validation
+	testCases := []struct {
+		name          string
+		params        tools.TextFileParams
+		expectedError string
+	}{
+		{
+			name: "Valid parameters with content",
+			params: tools.TextFileParams{
+				Content:  "This is test content",
+				Filename: "test.txt",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Valid parameters without filename",
+			params: tools.TextFileParams{
+				Content:  "This is test content",
+				Filename: "",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Empty content",
+			params: tools.TextFileParams{
+				Content:  "",
+				Filename: "test.txt",
+			},
+			expectedError: "content cannot be empty",
+		},
+	}
+
+	// Run the test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tools.ValidateTextFileParams(tc.params)
+			if tc.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tc.expectedError)
+			}
+		})
+	}
+}
+
+// TestGenerateTextFile tests the text file generation functionality
+func TestGenerateTextFile(t *testing.T) {
+	// Test cases for text file generation
+	testCases := []struct {
+		name            string
+		params          tools.TextFileParams
+		expectedContent string
+		expectedName    string
+		expectError     bool
+	}{
+		{
+			name: "Generate file with content and filename",
+			params: tools.TextFileParams{
+				Content:  "This is test content",
+				Filename: "test.txt",
+			},
+			expectedContent: "This is test content",
+			expectedName:    "test.txt",
+			expectError:     false,
+		},
+		{
+			name: "Generate file with default filename",
+			params: tools.TextFileParams{
+				Content:  "This is test content",
+				Filename: "",
+			},
+			expectedContent: "This is test content",
+			expectedName:    "download.txt",
+			expectError:     false,
+		},
+		{
+			name: "Error with empty content",
+			params: tools.TextFileParams{
+				Content:  "",
+				Filename: "test.txt",
+			},
+			expectError: true,
+		},
+	}
+
+	// Run the test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			content, filename, err := tools.GenerateTextFile(tc.params)
+			
+			if tc.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedContent, content)
+				assert.Equal(t, tc.expectedName, filename)
+			}
+		})
+	}
+}

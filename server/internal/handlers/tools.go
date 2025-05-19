@@ -52,6 +52,16 @@ case "month":
 result, toolErr = executeDateComponentTool("month")
 case "year":
 result, toolErr = executeDateComponentTool("year")
+case "text-file":
+// For the text file tool, we handle it differently as it needs to set special headers
+if err := executeTextFileTool(w, r); err != nil {
+w.WriteHeader(http.StatusBadRequest)
+json.NewEncoder(w).Encode(ToolResponse{
+Success: false,
+Error:   err.Error(),
+})
+}
+return // Early return as we've already written the response
 default:
 // For unknown tools, just return the tool info
 result = toolInfo
@@ -257,4 +267,40 @@ default:
 resultJSON, _ := json.MarshalIndent(result, "", "  ")
 fmt.Fprintf(w, "%s", resultJSON)
 }
+}
+
+// executeTextFileTool handles the text file tool which generates a downloadable text file
+// from the provided content
+func executeTextFileTool(w http.ResponseWriter, r *http.Request) error {
+// Parse form parameters (support both GET and POST)
+if r.Method == http.MethodPost {
+if err := r.ParseForm(); err != nil {
+return fmt.Errorf("error parsing form: %v", err)
+}
+}
+
+// Get content and filename parameters
+content := r.FormValue("content")
+filename := r.FormValue("filename")
+
+// Create parameters for the text file tool
+params := tools.TextFileParams{
+Content:  content,
+Filename: filename,
+}
+
+// Generate text file
+fileContent, fileName, err := tools.GenerateTextFile(params)
+if err != nil {
+return err
+}
+
+// Set headers for file download
+w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+w.Header().Set("Content-Type", "text/plain")
+w.Header().Set("Content-Length", fmt.Sprintf("%d", len(fileContent)))
+
+// Write the file content to the response
+_, err = w.Write([]byte(fileContent))
+return err
 }

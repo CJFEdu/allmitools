@@ -76,7 +76,11 @@ The server currently includes the following tools:
 5. **Year Tool** (`/tools/year`) - Returns the current year
    - No parameters required
 
-6. **Text Formatter** (`/tools/text-formatter`) - Formats text with various options
+6. **Text File Tool** (`/tools/text-file`) - Generates a downloadable text file from provided content
+   - Parameters: `content` (required), `filename` (default: "download.txt")
+   - Returns a downloadable text file with the specified content
+
+7. **Text Formatter** (`/tools/text-formatter`) - Formats text with various options
    - Parameters: `text` (required), `uppercase` (default: false), `lowercase` (default: false)
 
 ### Output Formats
