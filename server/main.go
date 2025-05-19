@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/CJFEdu/allmitools/server/internal/handlers"
+	"github.com/CJFEdu/allmitools/server/internal/templates"
 	"github.com/gorilla/mux"
 )
 
@@ -47,6 +48,12 @@ func main() {
 	config := serverConfig{
 		Port:        8080,
 		TemplatesDir: filepath.Join("templates"),
+	}
+
+	// Initialize the template manager
+	log.Println("Initializing template manager...")
+	if err := templates.Initialize("."); err != nil {
+		log.Fatalf("Error initializing template manager: %v", err)
 	}
 
 	// Create and configure the router

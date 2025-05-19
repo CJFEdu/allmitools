@@ -2,15 +2,17 @@
 package handlers
 
 import (
-"encoding/json"
-"fmt"
-"net/http"
-"strconv"
-"time"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
-"github.com/CJFEdu/allmitools/server/internal/models"
-"github.com/CJFEdu/allmitools/server/internal/tools"
-"github.com/gorilla/mux"
+	"github.com/CJFEdu/allmitools/server/internal/models"
+	"github.com/CJFEdu/allmitools/server/internal/templates"
+	"github.com/CJFEdu/allmitools/server/internal/tools"
+	"github.com/gorilla/mux"
 )
 
 // ToolResponse represents the response from a tool
@@ -23,49 +25,108 @@ Error   string `json:"error,omitempty"`
 
 // ToolsHandler handles requests to use specific tools
 func ToolsHandler(w http.ResponseWriter, r *http.Request) {
-vars := mux.Vars(r)
-toolName := vars["tool_name"]
+	vars := mux.Vars(r)
+	toolName := vars["tool_name"]
 
-// Get tool info
-toolInfo, err := models.GetToolInfo(toolName)
-if err != nil {
-w.WriteHeader(http.StatusNotFound)
-json.NewEncoder(w).Encode(ToolResponse{
-Success: false,
-Error:   fmt.Sprintf("Tool not found: %s", toolName),
-})
-return
-}
-
-// Parse query parameters and execute the appropriate tool
-var result interface{}
-var toolErr error
-
-switch toolName {
-case "random-number":
-result, toolErr = executeRandomNumberTool(r)
-case "date":
-result, toolErr = executeDateFormatterTool(r)
-case "day":
-result, toolErr = executeDateComponentTool("day")
-case "month":
-result, toolErr = executeDateComponentTool("month")
-case "year":
-result, toolErr = executeDateComponentTool("year")
-case "text-file":
-// For the text file tool, we handle it differently as it needs to set special headers
-if err := executeTextFileTool(w, r); err != nil {
-w.WriteHeader(http.StatusBadRequest)
-json.NewEncoder(w).Encode(ToolResponse{
-Success: false,
-Error:   err.Error(),
-})
-}
-return // Early return as we've already written the response
-default:
-// For unknown tools, just return the tool info
-result = toolInfo
-}
+	// Get tool info
+	toolInfo, err := models.GetToolInfo(toolName)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		
+		// Check if the client accepts JSON
+		if strings.Contains(r.Header.Get("Accept"), "application/json") {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(ToolResponse{
+				Success: false,
+				Error:   fmt.Sprintf("Tool not found: %s", toolName),
+			})
+			return
+		}
+		
+		// Default to HTML response using 404 template
+		data := map[string]interface{}{
+			"Title":       "Tool Not Found",
+			"CurrentPage": "tools",
+		}
+		
+		// Render the 404 template
+		err := templates.TemplateManager.RenderTemplate(w, "404", data)
+		if err != nil {
+			// Fallback if template rendering fails
+			w.Header().Set("Content-Type", "text/html")
+			fmt.Fprintf(w, "<html><body>")
+			fmt.Fprintf(w, "<h1>Tool Not Found</h1>")
+			fmt.Fprintf(w, "<p>The tool '%s' was not found.</p>", toolName)
+			fmt.Fprintf(w, "<p><a href='/'>Back to homepage</a></p>")
+			fmt.Fprintf(w, "</body></html>")
+		}
+		return
+	}
+	
+	// For GET requests, show the tool form
+	if r.Method == http.MethodGet {
+		// Check if the client accepts JSON
+		if strings.Contains(r.Header.Get("Accept"), "application/json") {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(ToolResponse{
+				Success: true,
+				Message: fmt.Sprintf("Tool information for: %s", toolName),
+				Data:    toolInfo,
+			})
+			return
+		}
+		
+		// Default to HTML response using template
+		data := map[string]interface{}{
+			"Title":       toolInfo.Name,
+			"CurrentPage": "tools",
+			"Tool":        toolInfo,
+		}
+		
+		// Render the template
+		err := templates.TemplateManager.RenderTemplate(w, "tool", data)
+		if err != nil {
+			// Fallback if template rendering fails
+			w.Header().Set("Content-Type", "text/html")
+			fmt.Fprintf(w, "<html><body>")
+			fmt.Fprintf(w, "<h1>%s</h1>", toolInfo.Name)
+			fmt.Fprintf(w, "<p>%s</p>", toolInfo.Description)
+			fmt.Fprintf(w, "<p><a href='/docs/%s'>View Documentation</a></p>", toolInfo.Name)
+			fmt.Fprintf(w, "</body></html>")
+		}
+		return
+	}
+	
+	// For POST requests, execute the tool
+	// Parse query parameters and execute the appropriate tool
+	var result interface{}
+	var toolErr error
+	
+	switch toolName {
+	case "random-number":
+		result, toolErr = executeRandomNumberTool(r)
+	case "date":
+		result, toolErr = executeDateFormatterTool(r)
+	case "day":
+		result, toolErr = executeDateComponentTool("day")
+	case "month":
+		result, toolErr = executeDateComponentTool("month")
+	case "year":
+		result, toolErr = executeDateComponentTool("year")
+	case "text-file":
+		// For the text file tool, we handle it differently as it needs to set special headers
+		if err := executeTextFileTool(w, r); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(ToolResponse{
+				Success: false,
+				Error:   err.Error(),
+			})
+		}
+		return // Early return as we've already written the response
+	default:
+		// For unknown tools, just return the tool info
+		result = toolInfo
+	}
 
 // Handle tool execution error
 if toolErr != nil {

@@ -13,6 +13,8 @@ import (
 
 // TestRouterConfiguration tests that the router is configured correctly
 func TestRouterConfiguration(t *testing.T) {
+	// Skip initializing templates as it's already done in TestMain
+	// The template manager should already be initialized
 	// Create a new router for testing
 	r := mux.NewRouter()
 	

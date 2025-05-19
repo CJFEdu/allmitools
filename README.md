@@ -17,7 +17,15 @@ This is the server component of the AllMiTools project. It provides a Go-powered
 |   |   |-- errors.go       // For custom error handlers like 404
 |   |-- /models             // Data structures for the application
 |   |   |-- tool.go         // Tool models and validation
-|-- /templates              // HTML templates (future implementation)
+|   |-- /templates          // Template management
+|   |   |-- manager.go      // Template manager for loading and rendering templates
+|-- /templates              // HTML templates for rendering pages
+|   |-- layout.html         // Base layout template
+|   |-- home.html           // Homepage template
+|   |-- docs_base.html      // Documentation base template
+|   |-- docs_tool.html      // Documentation tool template
+|   |-- tool.html           // Tool page template
+|   |-- 404.html            // Not found page template
 |-- /tests                  // Test files
 |   |-- /unit               // Unit tests
 |   |   |-- main_test.go    // Tests for handlers
@@ -93,6 +101,19 @@ Each tool supports multiple output formats:
 
 The output format is determined by the tool's configuration and can be influenced by the client's Accept header.
 
+## Template Rendering
+
+The server uses Go's html/template package for rendering HTML pages. The template system includes:
+
+1. **Template Manager** - Handles loading and rendering of templates
+2. **Content Negotiation** - Automatically detects the client's preferred content type and responds accordingly
+3. **Template Structure**:
+   - Base layout template with common elements (header, footer, styles)
+   - Page-specific templates for homepage, documentation, and tools
+   - Error templates (e.g., 404 Not Found)
+
+All handlers support both HTML and JSON responses based on the client's Accept header, making the server suitable for both browser-based usage and API integration.
+
 ## Testing
 
 ### Running Tests
@@ -110,7 +131,8 @@ The project includes comprehensive tests for all components:
 
 1. **Model Tests** - Tests for data structures and validation
 2. **Handler Tests** - Tests for HTTP handlers and routing
-3. **Tool Tests** - Tests for tool functionality:
+3. **Template Tests** - Tests for template rendering and content negotiation
+4. **Tool Tests** - Tests for tool functionality:
    - Random Number Generator tests with parameter validation
    - Date Formatter tests with mocked time for consistent results
    - Day/Month/Year tools tests with mocked time

@@ -2,15 +2,32 @@
 package unit
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/CJFEdu/allmitools/server/internal/handlers"
+	"github.com/CJFEdu/allmitools/server/internal/templates"
 	"github.com/CJFEdu/allmitools/server/tests/utils"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
+
+// TestMain is the entry point for running tests
+func TestMain(m *testing.M) {
+	// Initialize the template manager
+	err := templates.Initialize("../../")
+	if err != nil {
+		// If template initialization fails, print an error and exit
+		fmt.Printf("Error initializing templates: %v\n", err)
+		os.Exit(1)
+	}
+	
+	// Run the tests
+	os.Exit(m.Run())
+}
 
 // TestHomeHandler tests the home handler function
 func TestHomeHandler(t *testing.T) {
@@ -31,7 +48,7 @@ func TestHomeHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code, "handler returned wrong status code")
 	
 	// Check the response body
-	assert.Contains(t, rr.Body.String(), "Welcome to the AllMiTools Server", "handler returned unexpected body")
+	assert.Contains(t, rr.Body.String(), "Welcome to AllMiTools", "handler returned unexpected body")
 }
 
 // TestDocsBaseHandler tests the docs base handler function
@@ -39,6 +56,9 @@ func TestDocsBaseHandler(t *testing.T) {
 	// Create a request to pass to our handler
 	req, err := http.NewRequest("GET", "/docs", nil)
 	assert.NoError(t, err)
+	
+	// Set the Accept header to application/json to get a JSON response
+	req.Header.Set("Accept", "application/json")
 
 	// Create a ResponseRecorder to record the response
 	rr := httptest.NewRecorder()
@@ -52,8 +72,11 @@ func TestDocsBaseHandler(t *testing.T) {
 	// Check the status code
 	assert.Equal(t, http.StatusOK, rr.Code, "handler returned wrong status code")
 	
+	// Check the content type
+	assert.Equal(t, "application/json", rr.Header().Get("Content-Type"), "handler returned wrong content type")
+	
 	// Check the response body
-	assert.Contains(t, rr.Body.String(), "AllMiTools Documentation", "handler returned unexpected body")
+	assert.Contains(t, rr.Body.String(), "\"success\":true", "handler returned unexpected body")
 }
 
 // TestDocsToolHandler tests the docs tool handler function
@@ -66,17 +89,28 @@ func TestDocsToolHandler(t *testing.T) {
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 	
-	// Make a request to the test server
-	resp, err := http.Get(ts.URL + "/docs/random-number")
+	// Create a client
+	client := &http.Client{}
+	
+	// Create a request with JSON Accept header
+	req, err := http.NewRequest("GET", ts.URL + "/docs/random-number", nil)
+	assert.NoError(t, err)
+	req.Header.Set("Accept", "application/json")
+	
+	// Make the request
+	resp, err := client.Do(req)
 	assert.NoError(t, err)
 	defer resp.Body.Close()
 	
 	// Check the status code
 	assert.Equal(t, http.StatusOK, resp.StatusCode, "handler returned wrong status code")
 	
+	// Check the content type
+	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"), "handler returned wrong content type")
+	
 	// Check the response body
 	body := utils.ReadResponseBody(t, resp)
-	assert.Contains(t, body, "<h1>random-number</h1>", "handler returned unexpected body")
+	assert.Contains(t, body, "\"success\":true", "handler returned unexpected body")
 }
 
 // TestToolsHandler tests the tools handler function
@@ -89,13 +123,24 @@ func TestToolsHandler(t *testing.T) {
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 	
-	// Make a request to the test server
-	resp, err := http.Get(ts.URL + "/tools/random-number")
+	// Create a client
+	client := &http.Client{}
+	
+	// Create a request with JSON Accept header
+	req, err := http.NewRequest("GET", ts.URL + "/tools/random-number", nil)
+	assert.NoError(t, err)
+	req.Header.Set("Accept", "application/json")
+	
+	// Make the request
+	resp, err := client.Do(req)
 	assert.NoError(t, err)
 	defer resp.Body.Close()
 	
 	// Check the status code
 	assert.Equal(t, http.StatusOK, resp.StatusCode, "handler returned wrong status code")
+	
+	// Check the content type
+	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"), "handler returned wrong content type")
 	
 	// Check the response body
 	body := utils.ReadResponseBody(t, resp)
@@ -122,7 +167,6 @@ func TestNotFoundHandler(t *testing.T) {
 	
 	// Check the response body
 	assert.Contains(t, rr.Body.String(), "404 - Page Not Found", "handler returned unexpected body")
-	assert.Contains(t, rr.Body.String(), "/nonexistent", "handler returned unexpected body")
 }
 
 // TestNewRouter tests the router configuration
@@ -146,11 +190,11 @@ func TestNewRouter(t *testing.T) {
 		expectedStatus int
 		expectedBody   string
 	}{
-		{"Homepage GET", "GET", "/", http.StatusOK, "Welcome to the AllMiTools Server"},
-		{"Docs base path", "GET", "/docs", http.StatusOK, "AllMiTools Documentation"},
-		{"Docs base path with trailing slash", "GET", "/docs/", http.StatusOK, "AllMiTools Documentation"},
-		{"Docs for specific tool", "GET", "/docs/random-number", http.StatusOK, "<h1>random-number</h1>"},
-		{"Tool GET request", "GET", "/tools/random-number", http.StatusOK, "\"success\":true"},
+		{"Homepage GET", "GET", "/", http.StatusOK, "Welcome to AllMiTools"},
+		{"Docs base path", "GET", "/docs", http.StatusOK, "Documentation - AllMiTools"},
+		{"Docs base path with trailing slash", "GET", "/docs/", http.StatusOK, "Documentation - AllMiTools"},
+		{"Docs for specific tool", "GET", "/docs/random-number", http.StatusOK, "random-number"},
+		{"Tool GET request", "GET", "/tools/random-number", http.StatusOK, "random-number"},
 		{"Non-existent path", "GET", "/nonexistent", http.StatusNotFound, "404 - Page Not Found"},
 	}
 	

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/CJFEdu/allmitools/server/internal/models"
+	"github.com/CJFEdu/allmitools/server/internal/templates"
 	"github.com/gorilla/mux"
 )
 
@@ -35,20 +36,31 @@ func DocsBaseHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// Default to HTML response
-	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprintf(w, "<html><body>")
-	fmt.Fprintf(w, "<h1>AllMiTools Documentation</h1>")
-	fmt.Fprintf(w, "<h2>Available Tools</h2>")
-	fmt.Fprintf(w, "<ul>")
-	
-	for _, tool := range tools {
-		fmt.Fprintf(w, "<li><a href='/docs/%s'>%s</a> - %s</li>", 
-			tool.Name, tool.Name, tool.Description)
+	// Default to HTML response using template
+	data := map[string]interface{}{
+		"Title":       "Documentation",
+		"CurrentPage": "docs",
+		"Tools":       tools,
 	}
 	
-	fmt.Fprintf(w, "</ul>")
-	fmt.Fprintf(w, "</body></html>")
+	// Render the template
+	err := templates.TemplateManager.RenderTemplate(w, "docs_base", data)
+	if err != nil {
+		// Fallback if template rendering fails
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, "<html><body>")
+		fmt.Fprintf(w, "<h1>AllMiTools Documentation</h1>")
+		fmt.Fprintf(w, "<h2>Available Tools</h2>")
+		fmt.Fprintf(w, "<ul>")
+		
+		for _, tool := range tools {
+			fmt.Fprintf(w, "<li><a href='/docs/%s'>%s</a> - %s</li>", 
+				tool.Name, tool.Name, tool.Description)
+		}
+		
+		fmt.Fprintf(w, "</ul>")
+		fmt.Fprintf(w, "</body></html>")
+	}
 }
 
 // DocsToolHandler handles requests for documentation about a specific tool
@@ -71,13 +83,23 @@ func DocsToolHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		
-		// Default to HTML response
-		w.Header().Set("Content-Type", "text/html")
-		fmt.Fprintf(w, "<html><body>")
-		fmt.Fprintf(w, "<h1>Tool Not Found</h1>")
-		fmt.Fprintf(w, "<p>The tool '%s' was not found.</p>", toolName)
-		fmt.Fprintf(w, "<p><a href='/docs'>Back to documentation index</a></p>")
-		fmt.Fprintf(w, "</body></html>")
+		// Default to HTML response using 404 template
+		data := map[string]interface{}{
+			"Title":       "Tool Not Found",
+			"CurrentPage": "docs",
+		}
+		
+		// Render the 404 template
+		err := templates.TemplateManager.RenderTemplate(w, "404", data)
+		if err != nil {
+			// Fallback if template rendering fails
+			w.Header().Set("Content-Type", "text/html")
+			fmt.Fprintf(w, "<html><body>")
+			fmt.Fprintf(w, "<h1>Tool Not Found</h1>")
+			fmt.Fprintf(w, "<p>The tool '%s' was not found.</p>", toolName)
+			fmt.Fprintf(w, "<p><a href='/docs'>Back to documentation index</a></p>")
+			fmt.Fprintf(w, "</body></html>")
+		}
 		return
 	}
 	
@@ -92,44 +114,55 @@ func DocsToolHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// Default to HTML response
-	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprintf(w, "<html><body>")
-	fmt.Fprintf(w, "<h1>%s</h1>", toolInfo.Name)
-	fmt.Fprintf(w, "<p><strong>Description:</strong> %s</p>", toolInfo.Description)
-	fmt.Fprintf(w, "<p><strong>Version:</strong> %s</p>", toolInfo.Version)
-	fmt.Fprintf(w, "<p><strong>Author:</strong> %s</p>", toolInfo.Author)
-	fmt.Fprintf(w, "<p><strong>Output Type:</strong> %s</p>", toolInfo.OutputType)
-	
-	// Display parameters
-	if len(toolInfo.Parameters) > 0 {
-		fmt.Fprintf(w, "<h2>Parameters</h2>")
-		fmt.Fprintf(w, "<table border='1'>")
-		fmt.Fprintf(w, "<tr><th>Name</th><th>Type</th><th>Description</th><th>Required</th><th>Default</th></tr>")
-		
-		for _, param := range toolInfo.Parameters {
-			defaultValue := ""
-			if param.Default != nil {
-				defaultValue = fmt.Sprintf("%v", param.Default)
-			}
-			
-			fmt.Fprintf(w, "<tr>")
-			fmt.Fprintf(w, "<td>%s</td>", param.Name)
-			fmt.Fprintf(w, "<td>%s</td>", param.Type)
-			fmt.Fprintf(w, "<td>%s</td>", param.Description)
-			fmt.Fprintf(w, "<td>%v</td>", param.Required)
-			fmt.Fprintf(w, "<td>%s</td>", defaultValue)
-			fmt.Fprintf(w, "</tr>")
-		}
-		
-		fmt.Fprintf(w, "</table>")
+	// Default to HTML response using template
+	data := map[string]interface{}{
+		"Title":       toolInfo.Name + " Documentation",
+		"CurrentPage": "docs",
+		"Tool":        toolInfo,
 	}
 	
-	// Add a link back to the documentation index
-	fmt.Fprintf(w, "<p><a href='/docs'>Back to documentation index</a></p>")
-	
-	// Add a link to use the tool
-	fmt.Fprintf(w, "<p><a href='/tools/%s'>Use this tool</a></p>", toolInfo.Name)
-	
-	fmt.Fprintf(w, "</body></html>")
+	// Render the template
+	err = templates.TemplateManager.RenderTemplate(w, "docs_tool", data)
+	if err != nil {
+		// Fallback if template rendering fails
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, "<html><body>")
+		fmt.Fprintf(w, "<h1>%s</h1>", toolInfo.Name)
+		fmt.Fprintf(w, "<p><strong>Description:</strong> %s</p>", toolInfo.Description)
+		fmt.Fprintf(w, "<p><strong>Version:</strong> %s</p>", toolInfo.Version)
+		fmt.Fprintf(w, "<p><strong>Author:</strong> %s</p>", toolInfo.Author)
+		fmt.Fprintf(w, "<p><strong>Output Type:</strong> %s</p>", toolInfo.OutputType)
+		
+		// Display parameters
+		if len(toolInfo.Parameters) > 0 {
+			fmt.Fprintf(w, "<h2>Parameters</h2>")
+			fmt.Fprintf(w, "<table border='1'>")
+			fmt.Fprintf(w, "<tr><th>Name</th><th>Type</th><th>Description</th><th>Required</th><th>Default</th></tr>")
+			
+			for _, param := range toolInfo.Parameters {
+				defaultValue := ""
+				if param.Default != nil {
+					defaultValue = fmt.Sprintf("%v", param.Default)
+				}
+				
+				fmt.Fprintf(w, "<tr>")
+				fmt.Fprintf(w, "<td>%s</td>", param.Name)
+				fmt.Fprintf(w, "<td>%s</td>", param.Type)
+				fmt.Fprintf(w, "<td>%s</td>", param.Description)
+				fmt.Fprintf(w, "<td>%v</td>", param.Required)
+				fmt.Fprintf(w, "<td>%s</td>", defaultValue)
+				fmt.Fprintf(w, "</tr>")
+			}
+			
+			fmt.Fprintf(w, "</table>")
+		}
+		
+		// Add a link back to the documentation index
+		fmt.Fprintf(w, "<p><a href='/docs'>Back to documentation index</a></p>")
+		
+		// Add a link to use the tool
+		fmt.Fprintf(w, "<p><a href='/tools/%s'>Use this tool</a></p>", toolInfo.Name)
+		
+		fmt.Fprintf(w, "</body></html>")
+	}
 }

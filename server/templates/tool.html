@@ -1,0 +1,45 @@
+{{ define "content" }}
+<h1>{{ .Tool.Name }}</h1>
+<div class="card">
+    <p>{{ .Tool.Description }}</p>
+    <p><strong>Version:</strong> {{ .Tool.Version }}</p>
+</div>
+
+<h2>Use Tool</h2>
+<div class="card">
+    <form action="/tools/{{ .Tool.Name }}" method="post">
+        {{ range .Tool.Parameters }}
+        <div class="parameter">
+            <label for="{{ .Name }}">{{ .Name }}{{ if .Required }} *{{ end }}</label>
+            {{ if eq .Type "string" }}
+                <input type="text" id="{{ .Name }}" name="{{ .Name }}" {{ if .Required }}required{{ end }} {{ if not .Required }}placeholder="Default: {{ .Default }}"{{ end }}>
+            {{ else if eq .Type "int" }}
+                <input type="number" id="{{ .Name }}" name="{{ .Name }}" {{ if .Required }}required{{ end }} {{ if not .Required }}placeholder="Default: {{ .Default }}"{{ end }}>
+            {{ else if eq .Type "bool" }}
+                <input type="checkbox" id="{{ .Name }}" name="{{ .Name }}" {{ if .Default }}checked{{ end }}>
+            {{ else }}
+                <input type="text" id="{{ .Name }}" name="{{ .Name }}" {{ if .Required }}required{{ end }} {{ if not .Required }}placeholder="Default: {{ .Default }}"{{ end }}>
+            {{ end }}
+        </div>
+        {{ end }}
+        <input type="submit" value="Execute">
+    </form>
+</div>
+
+<h2>API Usage</h2>
+<div class="card">
+    <p>You can also use this tool via API:</p>
+    <pre>GET /tools/{{ .Tool.Name }}?{{ range $i, $p := .Tool.Parameters }}{{ if $i }}&{{ end }}{{ $p.Name }}=value{{ end }}</pre>
+    <p>Supported output formats:</p>
+    <ul>
+        <li>HTML (default in browser)</li>
+        <li>JSON (set Accept header to application/json)</li>
+        <li>Raw (set Accept header to text/plain)</li>
+    </ul>
+</div>
+
+<div class="card">
+    <a href="/docs/{{ .Tool.Name }}" class="button">View Documentation</a>
+    <a href="/" class="button">Back to Home</a>
+</div>
+{{ end }}

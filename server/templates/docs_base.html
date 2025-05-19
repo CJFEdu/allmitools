@@ -1,0 +1,18 @@
+{{ define "content" }}
+<h1>Documentation</h1>
+<div class="card">
+    <p>Welcome to the AllMiTools documentation. Here you can find information about all available tools.</p>
+    <p>Select a tool from the list below to view its documentation.</p>
+</div>
+
+<h2>Available Tools</h2>
+{{ range .Tools }}
+<div class="tool-card">
+    <h3>{{ .Name }}</h3>
+    <p>{{ .Description }}</p>
+    <p><strong>Version:</strong> {{ .Version }}</p>
+    <p><strong>Author:</strong> {{ .Author }}</p>
+    <a href="/docs/{{ .Name }}" class="button">View Documentation</a>
+</div>
+{{ end }}
+{{ end }}

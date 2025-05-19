@@ -1,0 +1,18 @@
+{{ define "content" }}
+<h1>Welcome to AllMiTools</h1>
+<div class="card">
+    <p>AllMiTools is a collection of no-code automation tools that help you perform various tasks without writing any code.</p>
+    <p>Choose from our selection of tools below or visit the <a href="/docs">documentation</a> for more information.</p>
+</div>
+
+<h2>Available Tools</h2>
+{{ range .Tools }}
+<div class="tool-card">
+    <h3>{{ .Name }}</h3>
+    <p>{{ .Description }}</p>
+    <p><strong>Version:</strong> {{ .Version }}</p>
+    <a href="/tools/{{ .Name }}" class="button">Use Tool</a>
+    <a href="/docs/{{ .Name }}" class="button">Documentation</a>
+</div>
+{{ end }}
+{{ end }}
