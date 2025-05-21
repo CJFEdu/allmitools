@@ -1,0 +1,37 @@
+{{ define "content" }}
+<h1>{{ .Tool.Name }} Documentation</h1>
+<div class="card">
+    <p>{{ .Tool.Description }}</p>
+    <p><strong>Version:</strong> {{ .Tool.Version }}</p>
+    <p><strong>Author:</strong> {{ .Tool.Author }}</p>
+    <p><strong>Output Type:</strong> {{ .Tool.OutputType }}</p>
+</div>
+
+<h2>Parameters</h2>
+<div class="card">
+    {{ if .Tool.Parameters }}
+        {{ range .Tool.Parameters }}
+        <div class="parameter">
+            <h3>{{ .Name }}</h3>
+            <p><strong>Type:</strong> {{ .Type }}</p>
+            <p><strong>Description:</strong> {{ .Description }}</p>
+            <p><strong>Required:</strong> {{ if .Required }}Yes{{ else }}No{{ end }}</p>
+            {{ if not .Required }}
+                <p><strong>Default:</strong> {{ .Default }}</p>
+            {{ end }}
+        </div>
+        {{ end }}
+    {{ else }}
+        <p>This tool does not require any parameters.</p>
+    {{ end }}
+</div>
+
+<h2>Try It</h2>
+<div class="card">
+    <a href="/tools/{{ .Tool.Name }}" class="button">Use Tool</a>
+</div>
+
+<div class="card">
+    <a href="/docs" class="button">Back to Documentation</a>
+</div>
+{{ end }}
