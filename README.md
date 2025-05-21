@@ -57,7 +57,7 @@ cd server
 go run main.go
 ```
 
-The server will start on port 8080 by default.
+The server will start on port 3000 by default.
 
 ## Website Sections
 

@@ -14,7 +14,7 @@ import (
 
 // serverConfig holds the configuration for the server
 type serverConfig struct {
-	Port        int
+	Port         int
 	TemplatesDir string
 }
 
@@ -41,12 +41,10 @@ func newRouter(config serverConfig) *mux.Router {
 	return r
 }
 
-
-
 func main() {
 	// Define the server configuration
 	config := serverConfig{
-		Port:        8080,
+		Port:         3000,
 		TemplatesDir: filepath.Join("templates"),
 	}
 
