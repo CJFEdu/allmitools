@@ -138,16 +138,30 @@ Error:   toolErr.Error(),
 return
 }
 
-// Check if the user specified an output format in the form
+// Check if the user specified an output format in the form, query parameter, or Accept header
 outputFormat := ""
+
+// 1. Check form parameter (highest priority)
 if r.Method == http.MethodPost {
 	outputFormat = r.FormValue("output_format")
 }
 
+// 2. Check query parameter if no form parameter
+if outputFormat == "" {
+	outputFormat = r.URL.Query().Get("output_format")
+}
+
+// 3. Check Accept header if no form or query parameter
+if outputFormat == "" && strings.Contains(r.Header.Get("Accept"), "application/json") {
+	outputFormat = "json"
+} else if outputFormat == "" && strings.Contains(r.Header.Get("Accept"), "text/plain") {
+	outputFormat = "raw"
+}
+
 // Determine the appropriate output format
-// Priority: 1. Form parameter, 2. Accept header, 3. Tool's default output type
+// Priority: 1. Form parameter, 2. Query parameter, 3. Accept header, 4. Tool's default output type
 if outputFormat != "" {
-	// Use the format specified in the form
+	// Use the format specified by the user (form, query parameter, or Accept header)
 	switch outputFormat {
 	case "json":
 		w.Header().Set("Content-Type", "application/json")
