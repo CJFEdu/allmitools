@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
+	"os"
+	"strconv"
 
 	"github.com/CJFEdu/allmitools/server/internal/handlers"
 	"github.com/CJFEdu/allmitools/server/internal/templates"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 // serverConfig holds the configuration for the server
@@ -41,12 +43,53 @@ func newRouter(config serverConfig) *mux.Router {
 	return r
 }
 
+// loadEnv loads environment variables from .env file
+func loadEnv() {
+	// Load .env file if it exists
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found, using default values or environment variables")
+	} else {
+		log.Println("Loaded configuration from .env file")
+	}
+}
+
+// getEnvInt gets an integer environment variable or returns the default value
+func getEnvInt(key string, defaultVal int) int {
+	valStr := os.Getenv(key)
+	if valStr == "" {
+		return defaultVal
+	}
+	
+	val, err := strconv.Atoi(valStr)
+	if err != nil {
+		log.Printf("Warning: Invalid value for %s, using default: %d\n", key, defaultVal)
+		return defaultVal
+	}
+	
+	return val
+}
+
+// getEnvString gets a string environment variable or returns the default value
+func getEnvString(key string, defaultVal string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultVal
+	}
+	return val
+}
+
 func main() {
+	// Load environment variables
+	loadEnv()
+	
 	// Define the server configuration
 	config := serverConfig{
-		Port:         3000,
-		TemplatesDir: filepath.Join("templates"),
+		Port:         getEnvInt("PORT", 3000),
+		TemplatesDir: getEnvString("TEMPLATES_DIR", "templates"),
 	}
+	
+	log.Printf("Using configuration: Port=%d, TemplatesDir=%s\n", config.Port, config.TemplatesDir)
 
 	// Initialize the template manager
 	log.Println("Initializing template manager...")
