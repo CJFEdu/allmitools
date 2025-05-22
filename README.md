@@ -51,13 +51,32 @@ This is the server component of the AllMiTools project. It provides a Go-powered
   - github.com/gorilla/mux v1.8.0
   - github.com/stretchr/testify v1.8.4 (for testing)
 
+### Configuration
+
+The server can be configured using environment variables or a `.env` file. An example `.env.example` file is provided in the server directory. Copy this file to `.env` and modify the values as needed.
+
+```bash
+# Copy the example .env file
+cp server/.env.example server/.env
+
+# Edit the .env file with your preferred settings
+```
+
+Available configuration options:
+
+| Environment Variable | Description | Default Value |
+|---------------------|-------------|---------------|
+| PORT | Server port | 3000 |
+| TEMPLATES_DIR | Templates directory | templates |
+| LOG_LEVEL | Logging level | info |
+
 ### Running the server
 ```bash
 cd server
 go run main.go
 ```
 
-The server will start on port 3000 by default.
+The server will start on port 3000 by default (or the port specified in your environment variables).
 
 ## Website Sections
 
