@@ -159,69 +159,99 @@ default:
 // Default to JSON
 w.Header().Set("Content-Type", "application/json")
 json.NewEncoder(w).Encode(ToolResponse{
-Success: true,
-Message: fmt.Sprintf("Tool '%s' executed successfully", toolName),
-Data:    result,
+	Success: true,
+	Message: fmt.Sprintf("Tool '%s' executed successfully", toolName),
+	Data:    result,
 })
 }
 }
 
 // executeRandomNumberTool executes the random number generator tool
 func executeRandomNumberTool(r *http.Request) (interface{}, error) {
-// Parse query parameters
-minStr := r.URL.Query().Get("min")
-maxStr := r.URL.Query().Get("max")
+	// Parse parameters from either POST or GET
+	var minStr, maxStr string
+	
+	// Check if this is a POST request
+	if r.Method == http.MethodPost {
+		// Parse the form data
+		if err := r.ParseForm(); err != nil {
+			return nil, fmt.Errorf("error parsing form data: %v", err)
+		}
+		
+		// Get parameters from form data
+		minStr = r.FormValue("min")
+		maxStr = r.FormValue("max")
+	} else {
+		// Get parameters from query string
+		minStr = r.URL.Query().Get("min")
+		maxStr = r.URL.Query().Get("max")
+	}
+	
+	// Set default values
+	min := 1
+	max := 100
+	
+	// Parse min parameter if provided
+	if minStr != "" {
+		parsedMin, err := strconv.Atoi(minStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid min parameter: %s", minStr)
+		}
+		min = parsedMin
+	}
 
-// Set default values
-min := 1
-max := 100
+	// Parse max parameter if provided
+	if maxStr != "" {
+		parsedMax, err := strconv.Atoi(maxStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid max parameter: %s", maxStr)
+		}
+		max = parsedMax
+	}
 
-// Parse min parameter if provided
-if minStr != "" {
-parsedMin, err := strconv.Atoi(minStr)
-if err != nil {
-return nil, fmt.Errorf("invalid min parameter: %s", minStr)
-}
-min = parsedMin
-}
-
-// Parse max parameter if provided
-if maxStr != "" {
-parsedMax, err := strconv.Atoi(maxStr)
-if err != nil {
-return nil, fmt.Errorf("invalid max parameter: %s", maxStr)
-}
-max = parsedMax
-}
-
-// Create parameters for the random number generator
-params := tools.RandomNumberParams{
-Min: min,
-Max: max,
-}
-
-// Generate random number
-randomNum, err := tools.GenerateRandomNumber(params)
-if err != nil {
-return nil, err
-}
-
-// Return result
-return map[string]interface{}{
-"number": randomNum,
-"min":    min,
-"max":    max,
-}, nil
+	// Create parameters for the random number generator
+	params := tools.RandomNumberParams{
+		Min: min,
+		Max: max,
+	}
+	
+	// Generate random number
+	randNum, err := tools.GenerateRandomNumber(params)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Return result
+	return map[string]interface{}{
+		"number": randNum,
+		"min":    min,
+		"max":    max,
+	}, nil
 }
 
 // executeDateFormatterTool executes the date formatter tool
 func executeDateFormatterTool(r *http.Request) (interface{}, error) {
-// Parse query parameters
-format := r.URL.Query().Get("format")
-offsetStr := r.URL.Query().Get("offset")
+	// Parse parameters from either POST or GET
+	var format, offsetStr string
+	
+	// Check if this is a POST request
+	if r.Method == http.MethodPost {
+		// Parse the form data
+		if err := r.ParseForm(); err != nil {
+			return nil, fmt.Errorf("error parsing form data: %v", err)
+		}
+		
+		// Get parameters from form data
+		format = r.FormValue("format")
+		offsetStr = r.FormValue("offset")
+	} else {
+		// Get parameters from query string
+		format = r.URL.Query().Get("format")
+		offsetStr = r.URL.Query().Get("offset")
+	}
 
-// Set default values
-offset := 0
+	// Set default values
+	offset := 0
 
 // Parse offset parameter if provided
 if offsetStr != "" {
@@ -333,16 +363,29 @@ fmt.Fprintf(w, "%s", resultJSON)
 // executeTextFileTool handles the text file tool which generates a downloadable text file
 // from the provided content
 func executeTextFileTool(w http.ResponseWriter, r *http.Request) error {
-// Parse form parameters (support both GET and POST)
-if r.Method == http.MethodPost {
-if err := r.ParseForm(); err != nil {
-return fmt.Errorf("error parsing form: %v", err)
-}
-}
-
-// Get content and filename parameters
-content := r.FormValue("content")
-filename := r.FormValue("filename")
+	// Parse parameters from either POST or GET
+	var content, filename string
+	
+	// Check if this is a POST request
+	if r.Method == http.MethodPost {
+		// Parse the form data
+		if err := r.ParseForm(); err != nil {
+			return fmt.Errorf("error parsing form data: %v", err)
+		}
+		
+		// Get parameters from form data
+		content = r.FormValue("content")
+		filename = r.FormValue("filename")
+	} else {
+		// Get parameters from query string
+		content = r.URL.Query().Get("content")
+		filename = r.URL.Query().Get("filename")
+	}
+	
+	// Validate parameters
+	if content == "" {
+		return fmt.Errorf("content parameter is required")
+	}
 
 // Create parameters for the text file tool
 params := tools.TextFileParams{
