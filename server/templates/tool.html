@@ -22,6 +22,16 @@
             {{ end }}
         </div>
         {{ end }}
+        
+        <div class="parameter">
+            <label for="output_format">Output Format</label>
+            <select id="output_format" name="output_format">
+                <option value="html" selected>HTML</option>
+                <option value="json">JSON</option>
+                <option value="raw">Raw</option>
+            </select>
+        </div>
+        
         <input type="submit" value="Execute">
     </form>
 </div>

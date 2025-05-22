@@ -138,27 +138,60 @@ Error:   toolErr.Error(),
 return
 }
 
+// Check if the user specified an output format in the form
+outputFormat := ""
+if r.Method == http.MethodPost {
+	outputFormat = r.FormValue("output_format")
+}
+
+// Determine the appropriate output format
+// Priority: 1. Form parameter, 2. Accept header, 3. Tool's default output type
+if outputFormat != "" {
+	// Use the format specified in the form
+	switch outputFormat {
+	case "json":
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(ToolResponse{
+			Success: true,
+			Message: fmt.Sprintf("Tool '%s' executed successfully", toolName),
+			Data:    result,
+		})
+		return
+	case "html":
+		w.Header().Set("Content-Type", "text/html")
+		// Generate HTML based on the result
+		generateHTMLResponse(w, toolName, result)
+		return
+	case "raw":
+		w.Header().Set("Content-Type", "text/plain")
+		// Generate raw text based on the result
+		generateRawResponse(w, toolName, result)
+		return
+	}
+}
+
+// If no form parameter or invalid format, use Accept header or tool's default
 // Set the appropriate content type based on the tool's output type
 switch toolInfo.OutputType {
 case "json":
-w.Header().Set("Content-Type", "application/json")
-json.NewEncoder(w).Encode(ToolResponse{
-Success: true,
-Message: fmt.Sprintf("Tool '%s' executed successfully", toolName),
-Data:    result,
-})
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(ToolResponse{
+		Success: true,
+		Message: fmt.Sprintf("Tool '%s' executed successfully", toolName),
+		Data:    result,
+	})
 case "html":
-w.Header().Set("Content-Type", "text/html")
-// Generate HTML based on the result
-generateHTMLResponse(w, toolName, result)
+	w.Header().Set("Content-Type", "text/html")
+	// Generate HTML based on the result
+	generateHTMLResponse(w, toolName, result)
 case "raw":
-w.Header().Set("Content-Type", "text/plain")
-// Generate raw text based on the result
-generateRawResponse(w, toolName, result)
+	w.Header().Set("Content-Type", "text/plain")
+	// Generate raw text based on the result
+	generateRawResponse(w, toolName, result)
 default:
-// Default to JSON
-w.Header().Set("Content-Type", "application/json")
-json.NewEncoder(w).Encode(ToolResponse{
+	// Default to JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(ToolResponse{
 	Success: true,
 	Message: fmt.Sprintf("Tool '%s' executed successfully", toolName),
 	Data:    result,
