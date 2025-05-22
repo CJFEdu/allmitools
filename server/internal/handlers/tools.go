@@ -63,8 +63,40 @@ func ToolsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// For GET requests, show the tool form
+	// Determine if we should execute the tool or show the form
+	// Execute if: POST request OR GET request with parameters
+	// Show form if: GET request without parameters
+	shouldExecute := false
+	
+	// Always execute for POST requests
+	if r.Method == http.MethodPost {
+		shouldExecute = true
+	}
+	
+	// For GET requests, check if there are any query parameters for the tool
 	if r.Method == http.MethodGet {
+		// Check if any tool-specific parameters are present
+		hasParameters := false
+		for _, param := range toolInfo.Parameters {
+			if r.URL.Query().Get(param.Name) != "" {
+				hasParameters = true
+				break
+			}
+		}
+		
+		// Also check for output_format parameter
+		if r.URL.Query().Get("output_format") != "" {
+			hasParameters = true
+		}
+		
+		// If there are parameters, execute the tool
+		if hasParameters {
+			shouldExecute = true
+		}
+	}
+	
+	// If we shouldn't execute (GET without parameters), show the form
+	if !shouldExecute {
 		// Check if the client accepts JSON
 		if strings.Contains(r.Header.Get("Accept"), "application/json") {
 			w.Header().Set("Content-Type", "application/json")
@@ -97,7 +129,7 @@ func ToolsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// For POST requests, execute the tool
+	// Execute the tool (for POST or GET with parameters)
 	// Parse query parameters and execute the appropriate tool
 	var result interface{}
 	var toolErr error
