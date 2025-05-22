@@ -22,7 +22,17 @@
             {{ end }}
         </div>
         {{ end }}
-        <input type="submit" value="Execute">
+        
+        <div class="parameter">
+            <label for="output_format">Output Format</label>
+            <select id="output_format" name="output_format">
+                <option value="html" selected>HTML</option>
+                <option value="json">JSON</option>
+                <option value="raw">Raw</option>
+            </select>
+        </div>
+        
+        <input id="submit-button" type="submit" value="Execute">
     </form>
 </div>
 
@@ -35,6 +45,7 @@
         <li>HTML (default in browser)</li>
         <li>JSON (set Accept header to application/json)</li>
         <li>Raw (set Accept header to text/plain)</li>
+        <li>Or add output_format=html|json|raw to the query string</li>
     </ul>
 </div>
 

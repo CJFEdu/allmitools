@@ -63,8 +63,40 @@ func ToolsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// For GET requests, show the tool form
+	// Determine if we should execute the tool or show the form
+	// Execute if: POST request OR GET request with parameters
+	// Show form if: GET request without parameters
+	shouldExecute := false
+	
+	// Always execute for POST requests
+	if r.Method == http.MethodPost {
+		shouldExecute = true
+	}
+	
+	// For GET requests, check if there are any query parameters for the tool
 	if r.Method == http.MethodGet {
+		// Check if any tool-specific parameters are present
+		hasParameters := false
+		for _, param := range toolInfo.Parameters {
+			if r.URL.Query().Get(param.Name) != "" {
+				hasParameters = true
+				break
+			}
+		}
+		
+		// Also check for output_format parameter
+		if r.URL.Query().Get("output_format") != "" {
+			hasParameters = true
+		}
+		
+		// If there are parameters, execute the tool
+		if hasParameters {
+			shouldExecute = true
+		}
+	}
+	
+	// If we shouldn't execute (GET without parameters), show the form
+	if !shouldExecute {
 		// Check if the client accepts JSON
 		if strings.Contains(r.Header.Get("Accept"), "application/json") {
 			w.Header().Set("Content-Type", "application/json")
@@ -97,7 +129,7 @@ func ToolsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// For POST requests, execute the tool
+	// Execute the tool (for POST or GET with parameters)
 	// Parse query parameters and execute the appropriate tool
 	var result interface{}
 	var toolErr error
@@ -138,27 +170,74 @@ Error:   toolErr.Error(),
 return
 }
 
+// Check if the user specified an output format in the form, query parameter, or Accept header
+outputFormat := ""
+
+// 1. Check form parameter (highest priority)
+if r.Method == http.MethodPost {
+	outputFormat = r.FormValue("output_format")
+}
+
+// 2. Check query parameter if no form parameter
+if outputFormat == "" {
+	outputFormat = r.URL.Query().Get("output_format")
+}
+
+// 3. Check Accept header if no form or query parameter
+if outputFormat == "" && strings.Contains(r.Header.Get("Accept"), "application/json") {
+	outputFormat = "json"
+} else if outputFormat == "" && strings.Contains(r.Header.Get("Accept"), "text/plain") {
+	outputFormat = "raw"
+}
+
+// Determine the appropriate output format
+// Priority: 1. Form parameter, 2. Query parameter, 3. Accept header, 4. Tool's default output type
+if outputFormat != "" {
+	// Use the format specified by the user (form, query parameter, or Accept header)
+	switch outputFormat {
+	case "json":
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(ToolResponse{
+			Success: true,
+			Message: fmt.Sprintf("Tool '%s' executed successfully", toolName),
+			Data:    result,
+		})
+		return
+	case "html":
+		w.Header().Set("Content-Type", "text/html")
+		// Generate HTML based on the result
+		generateHTMLResponse(w, toolName, result)
+		return
+	case "raw":
+		w.Header().Set("Content-Type", "text/plain")
+		// Generate raw text based on the result
+		generateRawResponse(w, toolName, result)
+		return
+	}
+}
+
+// If no form parameter or invalid format, use Accept header or tool's default
 // Set the appropriate content type based on the tool's output type
 switch toolInfo.OutputType {
 case "json":
-w.Header().Set("Content-Type", "application/json")
-json.NewEncoder(w).Encode(ToolResponse{
-Success: true,
-Message: fmt.Sprintf("Tool '%s' executed successfully", toolName),
-Data:    result,
-})
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(ToolResponse{
+		Success: true,
+		Message: fmt.Sprintf("Tool '%s' executed successfully", toolName),
+		Data:    result,
+	})
 case "html":
-w.Header().Set("Content-Type", "text/html")
-// Generate HTML based on the result
-generateHTMLResponse(w, toolName, result)
+	w.Header().Set("Content-Type", "text/html")
+	// Generate HTML based on the result
+	generateHTMLResponse(w, toolName, result)
 case "raw":
-w.Header().Set("Content-Type", "text/plain")
-// Generate raw text based on the result
-generateRawResponse(w, toolName, result)
+	w.Header().Set("Content-Type", "text/plain")
+	// Generate raw text based on the result
+	generateRawResponse(w, toolName, result)
 default:
-// Default to JSON
-w.Header().Set("Content-Type", "application/json")
-json.NewEncoder(w).Encode(ToolResponse{
+	// Default to JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(ToolResponse{
 	Success: true,
 	Message: fmt.Sprintf("Tool '%s' executed successfully", toolName),
 	Data:    result,
