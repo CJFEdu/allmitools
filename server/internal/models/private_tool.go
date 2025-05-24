@@ -12,18 +12,56 @@ type PrivateToolInfo struct {
 
 // AvailablePrivateTools is a map of available private tools
 var AvailablePrivateTools = map[string]PrivateToolInfo{
-	"private-demo": PrivateDemoTool(),
+	"text-storage": TextStorageTool(),
+	"text-retrieval": TextRetrievalTool(),
 }
 
-// PrivateDemoTool returns the tool info for the private demo tool
-func PrivateDemoTool() PrivateToolInfo {
+// TextStorageTool returns the tool info for the text storage tool
+func TextStorageTool() PrivateToolInfo {
 	return PrivateToolInfo{
 		ToolInfo: ToolInfo{
-			Name:        "private-demo",
-			Description: "A demo private tool that requires authentication",
+			Name:        "text-storage",
+			Description: "Stores text content in the database with a unique ID",
 			Version:     "1.0.0",
 			Author:      "AllMiTools Team",
-			Parameters:  []ToolParameter{}, // No parameters needed for this demo
+			Parameters: []ToolParameter{
+				{
+					Name:        "content",
+					Description: "The text content to store",
+					Type:        "text",
+					Required:    true,
+					Default:     "",
+				},
+				{
+					Name:        "save",
+					Description: "Whether to save the text permanently",
+					Type:        "boolean",
+					Required:    false,
+					Default:     "false",
+				},
+			},
+		},
+		RequiresAuth: true,
+	}
+}
+
+// TextRetrievalTool returns the tool info for the text retrieval tool
+func TextRetrievalTool() PrivateToolInfo {
+	return PrivateToolInfo{
+		ToolInfo: ToolInfo{
+			Name:        "text-retrieval",
+			Description: "Retrieves text content from the database using a unique ID",
+			Version:     "1.0.0",
+			Author:      "AllMiTools Team",
+			Parameters: []ToolParameter{
+				{
+					Name:        "id",
+					Description: "The unique ID of the text to retrieve",
+					Type:        "string",
+					Required:    true,
+					Default:     "",
+				},
+			},
 		},
 		RequiresAuth: true,
 	}

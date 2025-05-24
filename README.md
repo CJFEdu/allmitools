@@ -113,6 +113,71 @@ go run main.go
 
 The server will start on port 3000 by default (or the port specified in your environment variables).
 
+### Shutting down the server
+
+The server is designed to handle graceful shutdown to ensure that all database connections are properly closed and in-flight requests are completed. To properly shut down the server:
+
+1. **Using keyboard interrupt**: Press `Ctrl+C` in the terminal where the server is running. The server will detect this signal and perform a graceful shutdown.
+
+2. **Using system signals**: You can also send a SIGTERM signal to the server process:
+
+```bash
+# Find the process ID (PID) of the server
+pgrep -f "go run main.go"
+
+# Send a SIGTERM signal to the process
+kill -TERM <PID>
+```
+
+During shutdown, the server will:
+1. Stop accepting new connections
+2. Complete any in-flight requests (with a 15-second timeout)
+3. Close all database connections properly
+4. Log the shutdown process
+
+This ensures that no data is lost and all resources are properly released.
+
+### Database Maintenance
+
+The server includes an automated database maintenance system that helps keep the database clean and efficient. This system primarily handles the cleanup of temporary data that is no longer needed.
+
+#### Scheduled Cleanup
+
+By default, the server runs a scheduled cleanup task once every 24 hours. This task:
+
+- Removes text entries from the `text_storage` table that are older than 7 days and have `save_flag` set to `false`
+- Logs the number of entries removed during each cleanup operation
+- Handles any errors that occur during the cleanup process
+
+This automated cleanup ensures that the database doesn't grow unnecessarily large with temporary data that is no longer needed.
+
+#### Manual Cleanup
+
+Administrators can also trigger a manual cleanup operation through the private maintenance endpoint:
+
+```bash
+# Using curl (requires authentication cookie)
+curl -X POST -b "auth_cookie=your_auth_cookie" http://localhost:3000/private/maintenance/cleanup
+```
+
+The endpoint returns a JSON response with information about the cleanup operation:
+
+```json
+{
+  "success": true,
+  "message": "Successfully removed 42 expired text entries",
+  "entries_removed": 42,
+  "timestamp": "2025-05-24T18:27:01Z"
+}
+```
+
+#### Customizing Cleanup Behavior
+
+To modify the cleanup schedule or retention period, you'll need to edit the following files:
+
+- `server/main.go`: Change the `cleanupInterval` in the `scheduleCleanup` function to adjust how often the cleanup runs
+- `server/internal/handlers/cleanup.go`: Modify the retention period (currently 7 days) in the `DatabaseCleanupHandler` function
+
 ## Website Sections
 
 1. **Homepage** (`/`) - Introduction and list of available tools

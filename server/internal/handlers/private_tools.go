@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/CJFEdu/allmitools/server/internal/database"
 	"github.com/CJFEdu/allmitools/server/internal/models"
 	"github.com/CJFEdu/allmitools/server/internal/templates"
 	"github.com/CJFEdu/allmitools/server/internal/tools"
@@ -127,13 +128,22 @@ func PrivateToolsHandler(w http.ResponseWriter, r *http.Request) {
 	var result string
 	var toolErr error
 
-	switch toolName {
-	case "private-demo":
-		result, toolErr = tools.ExecutePrivateDemo(r)
-	default:
-		// For unknown tools, return an error
-		toolErr = fmt.Errorf("unknown private tool: %s", toolName)
+	// Initialize database connection if needed
+	if _, err := database.GetManager(); err != nil {
+		toolErr = fmt.Errorf("database connection error: %w", err)
 		result = ""
+	} else {
+		// Execute the appropriate tool based on the tool name
+		switch toolName {
+		case "text-storage":
+			result, toolErr = tools.ExecuteTextStorage(r)
+		case "text-retrieval":
+			result, toolErr = tools.ExecuteTextRetrieval(r)
+		default:
+			// For unknown tools, return an error
+			toolErr = fmt.Errorf("unknown private tool: %s", toolName)
+			result = ""
+		}
 	}
 
 	// Handle tool execution error
