@@ -94,7 +94,6 @@ func TestToolInfoValidation(t *testing.T) {
 						Required:    true,
 					},
 				},
-				OutputType: "json",
 			},
 			expectedError: "",
 		},
@@ -105,7 +104,6 @@ func TestToolInfoValidation(t *testing.T) {
 				Description: "A test tool",
 				Version:     "1.0.0",
 				Author:      "Test Author",
-				OutputType:  "json",
 			},
 			expectedError: "tool name cannot be empty",
 		},
@@ -116,7 +114,6 @@ func TestToolInfoValidation(t *testing.T) {
 				Description: "",
 				Version:     "1.0.0",
 				Author:      "Test Author",
-				OutputType:  "json",
 			},
 			expectedError: "tool description cannot be empty",
 		},
@@ -127,21 +124,10 @@ func TestToolInfoValidation(t *testing.T) {
 				Description: "A test tool",
 				Version:     "",
 				Author:      "Test Author",
-				OutputType:  "json",
 			},
 			expectedError: "tool version cannot be empty",
 		},
-		{
-			name: "Invalid output type",
-			toolInfo: models.ToolInfo{
-				Name:        "test-tool",
-				Description: "A test tool",
-				Version:     "1.0.0",
-				Author:      "Test Author",
-				OutputType:  "invalid",
-			},
-			expectedError: "invalid output type: invalid",
-		},
+
 		{
 			name: "Invalid parameter",
 			toolInfo: models.ToolInfo{
@@ -157,7 +143,6 @@ func TestToolInfoValidation(t *testing.T) {
 						Required:    true,
 					},
 				},
-				OutputType: "json",
 			},
 			expectedError: "parameter 0 (): parameter name cannot be empty",
 		},
@@ -217,16 +202,16 @@ func TestGetToolInfo(t *testing.T) {
 func TestListTools(t *testing.T) {
 	// Get the list of tools
 	tools := models.ListTools()
-	
+
 	// Check that we have the expected number of tools
 	assert.Equal(t, len(models.AvailableTools), len(tools))
-	
+
 	// Check that all tools are present
 	toolMap := make(map[string]bool)
 	for _, tool := range tools {
 		toolMap[tool.Name] = true
 	}
-	
+
 	for name := range models.AvailableTools {
 		assert.True(t, toolMap[name], "Tool %s should be in the list", name)
 	}

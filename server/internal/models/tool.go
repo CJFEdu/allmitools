@@ -49,7 +49,6 @@ type ToolInfo struct {
 	Version     string          `json:"version"`     // Version of the tool
 	Author      string          `json:"author"`      // Author of the tool
 	Parameters  []ToolParameter `json:"parameters"`  // Parameters for the tool
-	OutputType  string          `json:"outputType"`  // Type of output (html, json, raw)
 }
 
 // Validate checks if the tool info is valid
@@ -66,16 +65,7 @@ func (t *ToolInfo) Validate() error {
 		return errors.New("tool version cannot be empty")
 	}
 	
-	// Validate output type
-	validOutputTypes := map[string]bool{
-		"html": true,
-		"json": true,
-		"raw":  true,
-	}
-	
-	if !validOutputTypes[t.OutputType] {
-		return fmt.Errorf("invalid output type: %s", t.OutputType)
-	}
+	// Output type validation removed
 	
 	// Validate parameters
 	for i, param := range t.Parameters {
@@ -110,7 +100,6 @@ var AvailableTools = map[string]ToolInfo{
 				Default:     100,
 			},
 		},
-		OutputType: "json",
 	},
 	"text-file": {
 		Name:        "text-file",
@@ -132,7 +121,6 @@ var AvailableTools = map[string]ToolInfo{
 				Default:     "download.txt",
 			},
 		},
-		OutputType: "raw",
 	},
 	"text-formatter": {
 		Name:        "text-formatter",
@@ -149,19 +137,11 @@ var AvailableTools = map[string]ToolInfo{
 			{
 				Name:        "uppercase",
 				Type:        "bool",
-				Description: "Convert text to uppercase",
-				Required:    false,
-				Default:     false,
-			},
-			{
-				Name:        "lowercase",
-				Type:        "bool",
-				Description: "Convert text to lowercase",
+				Description: "Convert text to uppercase (if false, converts to lowercase)",
 				Required:    false,
 				Default:     false,
 			},
 		},
-		OutputType: "html",
 	},
 }
 
