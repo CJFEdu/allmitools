@@ -63,11 +63,17 @@ func ParseRandomStringParams(r *http.Request) (RandomStringParams, error) {
 
 	// Parse mixedCase parameter if provided
 	if mixedCaseStr != "" {
-		parsedMixedCase, err := strconv.ParseBool(mixedCaseStr)
-		if err != nil {
-			return RandomStringParams{}, fmt.Errorf("invalid mixedCase parameter: %s", mixedCaseStr)
+		// Handle HTML form checkbox which sends "on" when checked
+		if mixedCaseStr == "on" {
+			mixedCase = true
+		} else {
+			// Try to parse as boolean
+			parsedMixedCase, err := strconv.ParseBool(mixedCaseStr)
+			if err != nil {
+				return RandomStringParams{}, fmt.Errorf("invalid mixedCase parameter: %s (use true, false, or on)", mixedCaseStr)
+			}
+			mixedCase = parsedMixedCase
 		}
-		mixedCase = parsedMixedCase
 	}
 
 	// Create and return parameters
