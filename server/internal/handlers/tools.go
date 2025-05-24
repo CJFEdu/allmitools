@@ -136,6 +136,8 @@ func ToolsHandler(w http.ResponseWriter, r *http.Request) {
 	switch toolName {
 	case "random-number":
 		result, toolErr = tools.ExecuteRandomNumber(r)
+	case "random-string":
+		result, toolErr = tools.ExecuteRandomString(r)
 	case "date":
 		result, toolErr = tools.ExecuteDateFormatter(r)
 	case "day":

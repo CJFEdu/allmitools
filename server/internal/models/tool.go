@@ -80,6 +80,7 @@ func (t *ToolInfo) Validate() error {
 // AvailableTools is a map of available tools
 var AvailableTools = map[string]ToolInfo{
 	"random-number":  RandomNumberTool(),
+	"random-string":  RandomStringTool(),
 	"text-file":      TextFileTool(),
 	"text-formatter": TextFormatterTool(),
 	"date":           DateFormatterTool(),
