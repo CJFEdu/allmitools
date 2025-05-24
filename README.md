@@ -69,6 +69,41 @@ Available configuration options:
 | PORT | Server port | 3000 |
 | TEMPLATES_DIR | Templates directory | templates |
 | LOG_LEVEL | Logging level | info |
+| PRIVATE_USE_PASSWORD | SHA-256 hash of password for private tools | (required for private tools) |
+| DB_HOST | PostgreSQL host | localhost |
+| DB_PORT | PostgreSQL port | 5432 |
+| DB_NAME | PostgreSQL database name | allmitools |
+| DB_USER | PostgreSQL username | allmitools_user |
+| DB_PASSWORD | PostgreSQL password | (required for database connection) |
+| DB_SSL_MODE | PostgreSQL SSL mode | disable |
+
+### Database Setup
+
+#### PostgreSQL Installation
+
+For detailed instructions on installing and configuring PostgreSQL on Ubuntu 24.04, refer to the [PostgresInstall.md](../PostgresInstall.md) guide in the root directory of the repository. This guide includes security best practices and configuration steps.
+
+#### Database Migration
+
+Before running the server for the first time, you need to create the database schema:
+
+```bash
+# Navigate to the server directory
+cd server
+
+# Run the SQL migration file
+psql -U allmitools_user -d allmitools -h localhost -f migrations/001_initial_schema.sql
+```
+
+Alternatively, you can run the migration directly from the PostgreSQL command line:
+
+```bash
+# Connect to PostgreSQL as the allmitools_user
+psql -U allmitools_user -d allmitools -h localhost
+
+# Inside the PostgreSQL prompt, run:
+\i migrations/001_initial_schema.sql
+```
 
 ### Running the server
 ```bash
@@ -109,6 +144,21 @@ The server currently includes the following tools:
 
 7. **Text Formatter** (`/tools/text-formatter`) - Formats text with various options
    - Parameters: `text` (required), `uppercase` (default: false), `lowercase` (default: false)
+
+### Private Tools
+
+The server also includes private tools that require authentication. These tools are accessible at `/private/tools/{tool_name}` after logging in through the `/login` page.
+
+1. **Text Storage** (`/private/tools/text-storage`) - Stores text content in the database
+   - Parameters: `content` (required), `save` (default: false)
+   - Returns a unique string ID for the stored text
+   - The `save` parameter determines whether the text should be permanently saved
+
+2. **Text Retrieval** (`/private/tools/text-retrieval`) - Retrieves text content from the database
+   - Parameters: `id` (required)
+   - Returns the text content associated with the provided ID
+
+Private tools require authentication using a password. The password hash is stored in the `.env` file as `PRIVATE_USE_PASSWORD`. You can generate a password hash using the utility in `cmd/hashpassword/main.go`.
 
 ### Output Formats
 
