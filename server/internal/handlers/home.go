@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/CJFEdu/allmitools/server/internal/middleware"
 	"github.com/CJFEdu/allmitools/server/internal/models"
 	"github.com/CJFEdu/allmitools/server/internal/templates"
 )
@@ -22,6 +23,9 @@ type HomeResponse struct {
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the list of all available tools
 	tools := models.ListTools()
+	
+	// Check if the user is authenticated
+	isAuthenticated := middleware.IsAuthenticated(r)
 	
 	// Check if the client accepts JSON
 	if strings.Contains(r.Header.Get("Accept"), "application/json") {
@@ -40,9 +44,10 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	
 	// Default to HTML response using template
 	data := map[string]interface{}{
-		"Title":       "Home",
-		"CurrentPage": "home",
-		"Tools":       tools,
+		"Title":           "Home",
+		"CurrentPage":     "home",
+		"Tools":           tools,
+		"IsAuthenticated": isAuthenticated,
 	}
 	
 	// Render the template

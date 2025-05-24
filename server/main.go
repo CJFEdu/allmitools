@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/CJFEdu/allmitools/server/internal/handlers"
+	"github.com/CJFEdu/allmitools/server/internal/middleware"
 	"github.com/CJFEdu/allmitools/server/internal/templates"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -36,6 +37,26 @@ func newRouter(config serverConfig) *mux.Router {
 
 	// Tools routes
 	r.HandleFunc("/tools/{tool_name}", handlers.ToolsHandler).Methods("GET", "POST")
+
+	// Authentication routes
+	r.HandleFunc("/login", handlers.LoginHandler).Methods("GET", "POST")
+	r.HandleFunc("/logout", handlers.LogoutHandler).Methods("GET")
+
+	// Private tools routes (protected by auth middleware)
+	privateRouter := r.PathPrefix("/private").Subrouter()
+	privateRouter.Use(middleware.AuthMiddleware)
+
+	// Private tools listing
+	privateRouter.HandleFunc("/tools", handlers.PrivateToolsListHandler).Methods("GET")
+	privateRouter.HandleFunc("/tools/", handlers.PrivateToolsListHandler).Methods("GET")
+
+	// Private tool execution
+	privateRouter.HandleFunc("/tools/{tool_name}", handlers.PrivateToolsHandler).Methods("GET", "POST")
+
+	// Private documentation
+	privateRouter.HandleFunc("/docs", handlers.PrivateDocsBaseHandler).Methods("GET")
+	privateRouter.HandleFunc("/docs/", handlers.PrivateDocsBaseHandler).Methods("GET")
+	privateRouter.HandleFunc("/docs/{tool_name}", handlers.PrivateDocsToolHandler).Methods("GET")
 
 	// Set custom 404 handler
 	r.NotFoundHandler = http.HandlerFunc(handlers.NotFoundHandler)

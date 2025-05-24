@@ -36,6 +36,9 @@ func (m *Manager) LoadTemplates() error {
 		"docs_tool",
 		"tool",
 		"404",
+		"login",
+		"private_tools_list",
+		"private_docs_base",
 	}
 
 	// Load each template

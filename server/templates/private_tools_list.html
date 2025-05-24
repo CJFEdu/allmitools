@@ -1,0 +1,23 @@
+{{define "content"}}
+<section class="tools-list">
+    <h2>Private Tools</h2>
+    <p>These tools are only accessible with proper authentication.</p>
+    
+    {{if .PrivateTools}}
+        <div class="tools-grid">
+            {{range .PrivateTools}}
+                <div class="tool-card">
+                    <h3>{{.Name}}</h3>
+                    <p>{{.Description}}</p>
+                    <div class="tool-actions">
+                        <a href="/private/tools/{{.Name}}" class="button">Use Tool</a>
+                        <a href="/private/docs/{{.Name}}" class="button">Documentation</a>
+                    </div>
+                </div>
+            {{end}}
+        </div>
+    {{else}}
+        <p>No private tools are currently available.</p>
+    {{end}}
+</section>
+{{end}}
