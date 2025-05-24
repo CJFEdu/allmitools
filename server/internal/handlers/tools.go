@@ -148,6 +148,8 @@ func ToolsHandler(w http.ResponseWriter, r *http.Request) {
 		result, toolErr = tools.ExecuteTextFormatter(r)
 	case "url-encoder":
 		result, toolErr = tools.ExecuteURLEncoder(r)
+	case "sha256-hasher":
+		result, toolErr = tools.ExecuteSHA256Hasher(r)
 	case "text-file":
 		// For the text file tool, we handle it differently as it needs to set special headers
 		if err := executeTextFileTool(w, r); err != nil {

@@ -87,6 +87,7 @@ var AvailableTools = map[string]ToolInfo{
 	"month":          MonthTool(),
 	"year":           YearTool(),
 	"url-encoder":    URLEncoderTool(),
+	"sha256-hasher":  SHA256HasherTool(),
 }
 
 // GetToolInfo returns information about a tool
