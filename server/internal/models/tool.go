@@ -86,6 +86,7 @@ var AvailableTools = map[string]ToolInfo{
 	"day":            DayTool(),
 	"month":          MonthTool(),
 	"year":           YearTool(),
+	"url-encoder":    URLEncoderTool(),
 }
 
 // GetToolInfo returns information about a tool
