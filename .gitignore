@@ -28,3 +28,5 @@ go.work.sum
 server/build
 
 server/server
+
+.idea
