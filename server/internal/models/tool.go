@@ -79,70 +79,13 @@ func (t *ToolInfo) Validate() error {
 
 // AvailableTools is a map of available tools
 var AvailableTools = map[string]ToolInfo{
-	"random-number": {
-		Name:        "random-number",
-		Description: "Generate a random number within a specified range",
-		Version:     "1.0.0",
-		Author:      "AllMiTools Team",
-		Parameters: []ToolParameter{
-			{
-				Name:        "min",
-				Type:        "int",
-				Description: "Minimum value (inclusive)",
-				Required:    false,
-				Default:     1,
-			},
-			{
-				Name:        "max",
-				Type:        "int",
-				Description: "Maximum value (inclusive)",
-				Required:    false,
-				Default:     100,
-			},
-		},
-	},
-	"text-file": {
-		Name:        "text-file",
-		Description: "Generate a downloadable text file from provided content",
-		Version:     "1.0.0",
-		Author:      "AllMiTools Team",
-		Parameters: []ToolParameter{
-			{
-				Name:        "content",
-				Type:        "string",
-				Description: "Content to be saved as a text file",
-				Required:    true,
-			},
-			{
-				Name:        "filename",
-				Type:        "string",
-				Description: "Optional filename for the text file",
-				Required:    false,
-				Default:     "download.txt",
-			},
-		},
-	},
-	"text-formatter": {
-		Name:        "text-formatter",
-		Description: "Format text with various options",
-		Version:     "1.0.0",
-		Author:      "AllMiTools Team",
-		Parameters: []ToolParameter{
-			{
-				Name:        "text",
-				Type:        "string",
-				Description: "Text to format",
-				Required:    true,
-			},
-			{
-				Name:        "uppercase",
-				Type:        "bool",
-				Description: "Convert text to uppercase (if false, converts to lowercase)",
-				Required:    false,
-				Default:     false,
-			},
-		},
-	},
+	"random-number":  RandomNumberTool(),
+	"text-file":      TextFileTool(),
+	"text-formatter": TextFormatterTool(),
+	"date":           DateFormatterTool(),
+	"day":            DayTool(),
+	"month":          MonthTool(),
+	"year":           YearTool(),
 }
 
 // GetToolInfo returns information about a tool
