@@ -29,8 +29,8 @@ func ExecuteTextStorage(r *http.Request) (string, error) {
 		contentType := r.Header.Get("Content-Type")
 
 		// If it's a form submission, parse form data
-		if strings.Contains(contentType, "application/x-www-form-urlencoded") || 
-		   strings.Contains(contentType, "multipart/form-data") {
+		if strings.Contains(contentType, "application/x-www-form-urlencoded") ||
+			strings.Contains(contentType, "multipart/form-data") {
 			// Parse form data for POST requests
 			if err := r.ParseForm(); err != nil {
 				return "", fmt.Errorf("failed to parse form data: %w", err)
@@ -46,21 +46,21 @@ func ExecuteTextStorage(r *http.Request) (string, error) {
 		} else if strings.Contains(contentType, "application/json") {
 			// Parse JSON data using a map to accept any fields
 			var jsonData map[string]interface{}
-			
+
 			// Read the entire body
 			decoder := json.NewDecoder(r.Body)
 			if err := decoder.Decode(&jsonData); err != nil {
 				return "", fmt.Errorf("failed to parse JSON data: %w", err)
 			}
 			defer r.Body.Close()
-			
+
 			// Extract the content field
 			if contentVal, ok := jsonData["content"]; ok {
 				if contentStr, ok := contentVal.(string); ok {
 					content = contentStr
 				}
 			}
-			
+
 			// Extract the save field if present
 			if saveVal, ok := jsonData["save"]; ok {
 				switch v := saveVal.(type) {
