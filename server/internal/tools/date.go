@@ -3,6 +3,8 @@ package tools
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -72,4 +74,77 @@ func GetDateComponent(component string, now time.Time) (interface{}, error) {
 	default:
 		return nil, fmt.Errorf("invalid date component: %s", component)
 	}
+}
+
+// ParseDateFormatterParams parses the date formatter parameters from an HTTP request
+// It handles both POST and GET requests
+func ParseDateFormatterParams(r *http.Request) (DateFormatterParams, error) {
+	// Parse parameters from either POST or GET
+	var format, offsetStr string
+
+	// Check if this is a POST request
+	if r.Method == http.MethodPost {
+		// Parse the form data
+		if err := r.ParseForm(); err != nil {
+			return DateFormatterParams{}, fmt.Errorf("error parsing form data: %v", err)
+		}
+
+		// Get parameters from form data
+		format = r.FormValue("format")
+		offsetStr = r.FormValue("offset")
+	} else {
+		// Get parameters from query string
+		format = r.URL.Query().Get("format")
+		offsetStr = r.URL.Query().Get("offset")
+	}
+
+	// Set default values
+	offset := 0
+
+	// Parse offset parameter if provided
+	if offsetStr != "" {
+		parsedOffset, err := strconv.Atoi(offsetStr)
+		if err != nil {
+			return DateFormatterParams{}, fmt.Errorf("invalid offset parameter: %s", offsetStr)
+		}
+		offset = parsedOffset
+	}
+
+	// Create and return parameters
+	return DateFormatterParams{
+		Format: format,
+		Offset: offset,
+	}, nil
+}
+
+// ExecuteDateFormatter executes the date formatter with the given HTTP request
+// It parses parameters from the request and returns the formatted date as a string
+func ExecuteDateFormatter(r *http.Request) (string, error) {
+	// Parse parameters from the request
+	params, err := ParseDateFormatterParams(r)
+	if err != nil {
+		return "", err
+	}
+
+	// Format date
+	formattedDate, err := FormatDate(params, time.Now())
+	if err != nil {
+		return "", err
+	}
+
+	// Return the formatted date as a string
+	return formattedDate, nil
+}
+
+// ExecuteDateComponent executes a date component request (day, month, or year)
+// It returns the component value as a string and any error that occurred
+func ExecuteDateComponent(component string) (string, error) {
+	// Get the specified date component
+	result, err := GetDateComponent(component, time.Now())
+	if err != nil {
+		return "", err
+	}
+
+	// Convert the result to a string and return it
+	return fmt.Sprintf("%v", result), nil
 }

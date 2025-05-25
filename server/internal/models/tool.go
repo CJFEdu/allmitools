@@ -49,7 +49,6 @@ type ToolInfo struct {
 	Version     string          `json:"version"`     // Version of the tool
 	Author      string          `json:"author"`      // Author of the tool
 	Parameters  []ToolParameter `json:"parameters"`  // Parameters for the tool
-	OutputType  string          `json:"outputType"`  // Type of output (html, json, raw)
 }
 
 // Validate checks if the tool info is valid
@@ -66,16 +65,7 @@ func (t *ToolInfo) Validate() error {
 		return errors.New("tool version cannot be empty")
 	}
 	
-	// Validate output type
-	validOutputTypes := map[string]bool{
-		"html": true,
-		"json": true,
-		"raw":  true,
-	}
-	
-	if !validOutputTypes[t.OutputType] {
-		return fmt.Errorf("invalid output type: %s", t.OutputType)
-	}
+	// Output type validation removed
 	
 	// Validate parameters
 	for i, param := range t.Parameters {
@@ -89,80 +79,16 @@ func (t *ToolInfo) Validate() error {
 
 // AvailableTools is a map of available tools
 var AvailableTools = map[string]ToolInfo{
-	"random-number": {
-		Name:        "random-number",
-		Description: "Generate a random number within a specified range",
-		Version:     "1.0.0",
-		Author:      "AllMiTools Team",
-		Parameters: []ToolParameter{
-			{
-				Name:        "min",
-				Type:        "int",
-				Description: "Minimum value (inclusive)",
-				Required:    false,
-				Default:     1,
-			},
-			{
-				Name:        "max",
-				Type:        "int",
-				Description: "Maximum value (inclusive)",
-				Required:    false,
-				Default:     100,
-			},
-		},
-		OutputType: "json",
-	},
-	"text-file": {
-		Name:        "text-file",
-		Description: "Generate a downloadable text file from provided content",
-		Version:     "1.0.0",
-		Author:      "AllMiTools Team",
-		Parameters: []ToolParameter{
-			{
-				Name:        "content",
-				Type:        "string",
-				Description: "Content to be saved as a text file",
-				Required:    true,
-			},
-			{
-				Name:        "filename",
-				Type:        "string",
-				Description: "Optional filename for the text file",
-				Required:    false,
-				Default:     "download.txt",
-			},
-		},
-		OutputType: "raw",
-	},
-	"text-formatter": {
-		Name:        "text-formatter",
-		Description: "Format text with various options",
-		Version:     "1.0.0",
-		Author:      "AllMiTools Team",
-		Parameters: []ToolParameter{
-			{
-				Name:        "text",
-				Type:        "string",
-				Description: "Text to format",
-				Required:    true,
-			},
-			{
-				Name:        "uppercase",
-				Type:        "bool",
-				Description: "Convert text to uppercase",
-				Required:    false,
-				Default:     false,
-			},
-			{
-				Name:        "lowercase",
-				Type:        "bool",
-				Description: "Convert text to lowercase",
-				Required:    false,
-				Default:     false,
-			},
-		},
-		OutputType: "html",
-	},
+	"random-number":  RandomNumberTool(),
+	"random-string":  RandomStringTool(),
+	"text-file":      TextFileTool(),
+	"text-formatter": TextFormatterTool(),
+	"date":           DateFormatterTool(),
+	"day":            DayTool(),
+	"month":          MonthTool(),
+	"year":           YearTool(),
+	"url-encoder":    URLEncoderTool(),
+	"sha256-hasher":  SHA256HasherTool(),
 }
 
 // GetToolInfo returns information about a tool

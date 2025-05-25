@@ -1,0 +1,21 @@
+{{define "content"}}
+<section class="docs-section">
+    <h2>Private Tools Documentation</h2>
+    <p>This section contains documentation for private tools that require authentication.</p>
+    
+    {{if .PrivateTools}}
+        <div class="docs-list">
+            <ul>
+                {{range .PrivateTools}}
+                    <li>
+                        <a href="/private/docs/{{.Name}}">{{.Name}}</a>
+                        <span class="tool-description">{{.Description}}</span>
+                    </li>
+                {{end}}
+            </ul>
+        </div>
+    {{else}}
+        <p>No private tools are currently available.</p>
+    {{end}}
+</section>
+{{end}}

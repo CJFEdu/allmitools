@@ -3,6 +3,18 @@
 <div class="card">
     <p>AllMiTools is a collection of no-code automation tools that help you perform various tasks without writing any code.</p>
     <p>Choose from our selection of tools below or visit the <a href="/docs">documentation</a> for more information.</p>
+    
+    {{ if .IsAuthenticated }}
+    <div class="auth-info">
+        <p><strong>You are logged in!</strong> You now have access to <a href="/private/tools">private tools</a> and <a href="/private/docs">private documentation</a>.</p>
+        <p><a href="/logout" id="logout-button" class="button button-small">Logout</a></p>
+    </div>
+    {{ else }}
+    <div class="auth-info">
+        <p>Some tools require authentication to access private tools.</p>
+        <p><a href="/login" id="login-button" class="button button-small">Login</a></p>
+    </div>
+    {{ end }}
 </div>
 
 <h2>Available Tools</h2>

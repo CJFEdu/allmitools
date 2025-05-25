@@ -131,7 +131,6 @@ func DocsToolHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "<p><strong>Description:</strong> %s</p>", toolInfo.Description)
 		fmt.Fprintf(w, "<p><strong>Version:</strong> %s</p>", toolInfo.Version)
 		fmt.Fprintf(w, "<p><strong>Author:</strong> %s</p>", toolInfo.Author)
-		fmt.Fprintf(w, "<p><strong>Output Type:</strong> %s</p>", toolInfo.OutputType)
 		
 		// Display parameters
 		if len(toolInfo.Parameters) > 0 {

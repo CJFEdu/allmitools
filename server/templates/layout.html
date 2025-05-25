@@ -154,6 +154,13 @@
                     <li{{ if eq .CurrentPage "home" }} class="current"{{ end }}><a href="/">Home</a></li>
                     <li{{ if eq .CurrentPage "docs" }} class="current"{{ end }}><a href="/docs">Documentation</a></li>
                     <li{{ if eq .CurrentPage "tools" }} class="current"{{ end }}><a href="/tools">Tools</a></li>
+                    {{ if .IsAuthenticated }}
+                    <li{{ if eq .CurrentPage "private-tools" }} class="current"{{ end }}><a href="/private/tools">Private Tools</a></li>
+                    <li{{ if eq .CurrentPage "private-docs" }} class="current"{{ end }}><a href="/private/docs">Private Docs</a></li>
+                    <li><a href="/logout">Logout</a></li>
+                    {{ else }}
+                    <li{{ if eq .CurrentPage "login" }} class="current"{{ end }}><a href="/login">Login</a></li>
+                    {{ end }}
                 </ul>
             </nav>
         </div>

@@ -7,7 +7,7 @@
 
 <h2>Use Tool</h2>
 <div class="card">
-    <form action="/tools/{{ .Tool.Name }}" method="post">
+    <form action="{{ if .IsPrivate }}/private/tools/{{ else }}/tools/{{ end }}{{ .Tool.Name }}" method="post">
         {{ range .Tool.Parameters }}
         <div class="parameter">
             <label for="{{ .Name }}">{{ .Name }}{{ if .Required }} *{{ end }}</label>
@@ -39,7 +39,7 @@
 <h2>API Usage</h2>
 <div class="card">
     <p>You can also use this tool via API:</p>
-    <pre>GET /tools/{{ .Tool.Name }}?{{ range $i, $p := .Tool.Parameters }}{{ if $i }}&{{ end }}{{ $p.Name }}=value{{ end }}</pre>
+    <pre>GET {{ if .IsPrivate }}/private/tools/{{ else }}/tools/{{ end }}{{ .Tool.Name }}?{{ range $i, $p := .Tool.Parameters }}{{ if $i }}&{{ end }}{{ $p.Name }}=value{{ end }}</pre>
     <p>Supported output formats:</p>
     <ul>
         <li>HTML (default in browser)</li>
@@ -50,7 +50,7 @@
 </div>
 
 <div class="card">
-    <a href="/docs/{{ .Tool.Name }}" class="button">View Documentation</a>
-    <a href="/" class="button">Back to Home</a>
+    <a href="{{ if .IsPrivate }}/private/docs/{{ else }}/docs/{{ end }}{{ .Tool.Name }}" class="button">View Documentation</a>
+    <a href="{{ if .IsPrivate }}/private/tools{{ else }}/{{ end }}" class="button">{{ if .IsPrivate }}Back to Private Tools{{ else }}Back to Home{{ end }}</a>
 </div>
 {{ end }}
