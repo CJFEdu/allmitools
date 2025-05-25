@@ -14,6 +14,7 @@ import (
 
 	"github.com/CJFEdu/allmitools/server/internal/database"
 	"github.com/CJFEdu/allmitools/server/internal/handlers"
+	"github.com/CJFEdu/allmitools/server/internal/logging"
 	"github.com/CJFEdu/allmitools/server/internal/middleware"
 	"github.com/CJFEdu/allmitools/server/internal/templates"
 	"github.com/gorilla/mux"
@@ -22,14 +23,21 @@ import (
 
 // serverConfig holds the configuration for the server
 type serverConfig struct {
-	Port         int
-	TemplatesDir string
+	Port              int
+	TemplatesDir      string
+	RequestLoggingEnabled bool
 }
 
 // newRouter creates and configures a new router with all the routes
 func newRouter(config serverConfig) *mux.Router {
 	// Initialize the router
 	r := mux.NewRouter()
+	
+	// Add request logger middleware if enabled
+	if config.RequestLoggingEnabled {
+		log.Println("Request logging is enabled")
+		r.Use(logging.RequestLoggerMiddleware)
+	}
 
 	// Register routes
 	// Homepage route
@@ -108,6 +116,22 @@ func getEnvString(key string, defaultVal string) string {
 	return val
 }
 
+// getEnvBool gets a boolean environment variable or returns the default value
+func getEnvBool(key string, defaultVal bool) bool {
+	valStr := os.Getenv(key)
+	if valStr == "" {
+		return defaultVal
+	}
+	
+	val, err := strconv.ParseBool(valStr)
+	if err != nil {
+		log.Printf("Warning: Invalid value for %s, using default: %v\n", key, defaultVal)
+		return defaultVal
+	}
+	
+	return val
+}
+
 // scheduleCleanup runs the database cleanup task on a schedule
 func scheduleCleanup() {
 	cleanupInterval := 24 * time.Hour // Run once per day
@@ -134,11 +158,13 @@ func main() {
 	
 	// Define the server configuration
 	config := serverConfig{
-		Port:         getEnvInt("PORT", 3000),
-		TemplatesDir: getEnvString("TEMPLATES_DIR", "templates"),
+		Port:                 getEnvInt("PORT", 3000),
+		TemplatesDir:         getEnvString("TEMPLATES_DIR", "templates"),
+		RequestLoggingEnabled: getEnvBool("REQUEST_LOGGING_ENABLED", false),
 	}
 	
-	log.Printf("Using configuration: Port=%d, TemplatesDir=%s\n", config.Port, config.TemplatesDir)
+	log.Printf("Using configuration: Port=%d, TemplatesDir=%s, RequestLoggingEnabled=%v\n", 
+		config.Port, config.TemplatesDir, config.RequestLoggingEnabled)
 
 	// Initialize the template manager
 	log.Println("Initializing template manager...")
