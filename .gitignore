@@ -30,3 +30,4 @@ server/build
 server/server
 
 .idea
+server/cmd/hashpassword/hashpassword
