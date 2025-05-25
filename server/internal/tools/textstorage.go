@@ -44,20 +44,34 @@ func ExecuteTextStorage(r *http.Request) (string, error) {
 				}
 			}
 		} else if strings.Contains(contentType, "application/json") {
-			// Parse JSON data
-			var params struct {
-				Content string `json:"content"`
-				Save    bool   `json:"save"`
-			}
+			// Parse JSON data using a map to accept any fields
+			var jsonData map[string]interface{}
+			
+			// Read the entire body
 			decoder := json.NewDecoder(r.Body)
-			if err := decoder.Decode(&params); err != nil {
+			if err := decoder.Decode(&jsonData); err != nil {
 				return "", fmt.Errorf("failed to parse JSON data: %w", err)
 			}
 			defer r.Body.Close()
 			
-			// Use the values from JSON
-			content = params.Content
-			saveFlag = params.Save
+			// Extract the content field
+			if contentVal, ok := jsonData["content"]; ok {
+				if contentStr, ok := contentVal.(string); ok {
+					content = contentStr
+				}
+			}
+			
+			// Extract the save field if present
+			if saveVal, ok := jsonData["save"]; ok {
+				switch v := saveVal.(type) {
+				case bool:
+					saveFlag = v
+				case string:
+					saveFlag, _ = strconv.ParseBool(v)
+				case float64: // JSON numbers are decoded as float64
+					saveFlag = v != 0
+				}
+			}
 		} else {
 			// Default to form parsing for backward compatibility
 			if err := r.ParseForm(); err != nil {
