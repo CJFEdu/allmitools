@@ -33,18 +33,22 @@ func ExecuteTextRetrieval(r *http.Request) (string, error) {
 			}
 			id = r.FormValue("id")
 		} else if strings.Contains(contentType, "application/json") {
-			// Parse JSON data
-			var params struct {
-				ID string `json:"id"`
-			}
+			// Parse JSON data using a map to accept any fields
+			var jsonData map[string]interface{}
+			
+			// Read the entire body
 			decoder := json.NewDecoder(r.Body)
-			if err := decoder.Decode(&params); err != nil {
+			if err := decoder.Decode(&jsonData); err != nil {
 				return "", fmt.Errorf("failed to parse JSON data: %w", err)
 			}
 			defer r.Body.Close()
 			
-			// Use the ID from JSON
-			id = params.ID
+			// Extract the ID field
+			if idVal, ok := jsonData["id"]; ok {
+				if idStr, ok := idVal.(string); ok {
+					id = idStr
+				}
+			}
 		} else {
 			// Default to form parsing for backward compatibility
 			if err := r.ParseForm(); err != nil {
