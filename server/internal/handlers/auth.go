@@ -2,6 +2,7 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -45,7 +46,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Error reading request body", http.StatusBadRequest)
 				return
 			}
-			defer r.Body.Close()
+
+			// Restore the request body so it can be read by other handlers
+			r.Body.Close()
+			r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 			// Decode JSON
 			if err := json.Unmarshal(body, &loginData); err != nil {

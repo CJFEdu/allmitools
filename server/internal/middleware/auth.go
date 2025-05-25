@@ -2,6 +2,7 @@
 package middleware
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -61,7 +62,9 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				// Limit request body size to prevent DoS attacks
 				body, err := io.ReadAll(io.LimitReader(r.Body, 1024))
 				if err == nil {
-					defer r.Body.Close()
+					// Restore the request body so it can be read by other handlers
+					r.Body.Close()
+					r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 					// Decode JSON
 					if err := json.Unmarshal(body, &loginData); err == nil {
