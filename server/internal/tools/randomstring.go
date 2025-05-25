@@ -2,10 +2,12 @@
 package tools
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -34,14 +36,43 @@ func ParseRandomStringParams(r *http.Request) (RandomStringParams, error) {
 
 	// Check if this is a POST request
 	if r.Method == http.MethodPost {
-		// Parse the form data
-		if err := r.ParseForm(); err != nil {
-			return RandomStringParams{}, fmt.Errorf("error parsing form data: %v", err)
-		}
+		// Check Content-Type header to determine how to parse the data
+		contentType := r.Header.Get("Content-Type")
 
-		// Get parameters from form data
-		lengthStr = r.FormValue("length")
-		mixedCaseStr = r.FormValue("mixedCase")
+		// If it's a form submission, parse form data
+		if strings.Contains(contentType, "application/x-www-form-urlencoded") || 
+		   strings.Contains(contentType, "multipart/form-data") {
+			// Parse the form data
+			if err := r.ParseForm(); err != nil {
+				return RandomStringParams{}, fmt.Errorf("error parsing form data: %v", err)
+			}
+
+			// Get parameters from form data
+			lengthStr = r.FormValue("length")
+			mixedCaseStr = r.FormValue("mixedCase")
+		} else if strings.Contains(contentType, "application/json") {
+			// Parse JSON data
+			var params RandomStringParams
+			decoder := json.NewDecoder(r.Body)
+			if err := decoder.Decode(&params); err != nil {
+				return RandomStringParams{}, fmt.Errorf("error parsing JSON data: %v", err)
+			}
+			defer r.Body.Close()
+			
+			// If JSON values are provided, use them directly
+			// Validate that length is set (default to 10 if not)
+			if params.Length <= 0 {
+				params.Length = 10
+			}
+			return params, nil
+		} else {
+			// Default to form parsing for backward compatibility
+			if err := r.ParseForm(); err != nil {
+				return RandomStringParams{}, fmt.Errorf("error parsing form data: %v", err)
+			}
+			lengthStr = r.FormValue("length")
+			mixedCaseStr = r.FormValue("mixedCase")
+		}
 	} else {
 		// Get parameters from query string
 		lengthStr = r.URL.Query().Get("length")

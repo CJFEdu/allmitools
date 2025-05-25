@@ -2,8 +2,11 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/CJFEdu/allmitools/server/internal/middleware"
 	"github.com/CJFEdu/allmitools/server/internal/templates"
@@ -13,14 +16,55 @@ import (
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if this is a POST request (login attempt)
 	if r.Method == http.MethodPost {
-		// Parse the form data
-		if err := r.ParseForm(); err != nil {
-			http.Error(w, "Error parsing form data", http.StatusBadRequest)
-			return
-		}
+		// Get the password from the request
+		var password string
+		
+		// Check Content-Type header to determine how to parse the data
+		contentType := r.Header.Get("Content-Type")
 
-		// Get the password from the form
-		password := r.FormValue("password")
+		// If it's a form submission, parse form data
+		if strings.Contains(contentType, "application/x-www-form-urlencoded") || 
+		   strings.Contains(contentType, "multipart/form-data") {
+			// Parse the form data
+			if err := r.ParseForm(); err != nil {
+				http.Error(w, "Error parsing form data", http.StatusBadRequest)
+				return
+			}
+
+			// Get the password from the form
+			password = r.FormValue("password")
+		} else if strings.Contains(contentType, "application/json") {
+			// Parse JSON data
+			var loginData struct {
+				Password string `json:"password"`
+			}
+
+			// Limit request body size to prevent DoS attacks
+			body, err := io.ReadAll(io.LimitReader(r.Body, 1024))
+			if err != nil {
+				http.Error(w, "Error reading request body", http.StatusBadRequest)
+				return
+			}
+			defer r.Body.Close()
+
+			// Decode JSON
+			if err := json.Unmarshal(body, &loginData); err != nil {
+				http.Error(w, "Error parsing JSON data", http.StatusBadRequest)
+				return
+			}
+
+			// Get the password from JSON
+			password = loginData.Password
+		} else {
+			// Default to form parsing for backward compatibility
+			if err := r.ParseForm(); err != nil {
+				http.Error(w, "Error parsing form data", http.StatusBadRequest)
+				return
+			}
+
+			// Get the password from the form
+			password = r.FormValue("password")
+		}
 		
 		// Verify the password
 		if password != "" && verifyPassword(password) {
