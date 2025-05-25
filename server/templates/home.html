@@ -7,10 +7,13 @@
     {{ if .IsAuthenticated }}
     <div class="auth-info">
         <p><strong>You are logged in!</strong> You now have access to <a href="/private/tools">private tools</a> and <a href="/private/docs">private documentation</a>.</p>
-        <p><a href="/logout" class="button button-small">Logout</a></p>
+        <p><a href="/logout" id="logout-button" class="button button-small">Logout</a></p>
     </div>
     {{ else }}
-    <p class="auth-info">Some tools require authentication. <a href="/login">Login</a> to access private tools.</p>
+    <div class="auth-info">
+        <p>Some tools require authentication to access private tools.</p>
+        <p><a href="/login" id="login-button" class="button button-small">Login</a></p>
+    </div>
     {{ end }}
 </div>
 
