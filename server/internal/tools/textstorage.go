@@ -47,12 +47,19 @@ func ExecuteTextStorage(r *http.Request) (string, error) {
 			// Parse JSON data using a map to accept any fields
 			var jsonData map[string]interface{}
 
+			// Make sure to close the body when we're done
+			defer r.Body.Close()
+			
+			// Check if body is nil
+			if r.Body == nil {
+				return "", fmt.Errorf("request body is empty")
+			}
+			
 			// Read the entire body
 			decoder := json.NewDecoder(r.Body)
 			if err := decoder.Decode(&jsonData); err != nil {
 				return "", fmt.Errorf("failed to parse JSON data: %w", err)
 			}
-			defer r.Body.Close()
 
 			// Extract the content field
 			if contentVal, ok := jsonData["content"]; ok {
