@@ -65,5 +65,5 @@ func ExecuteTextStorage(r *http.Request) (string, error) {
 	}
 
 	// Return the ID
-	return fmt.Sprintf("Text stored successfully with ID: %s", id), nil
+	return fmt.Sprintf("%s", id), nil
 }
