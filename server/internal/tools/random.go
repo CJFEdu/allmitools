@@ -2,11 +2,13 @@
 package tools
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -48,14 +50,41 @@ func ParseRandomNumberParams(r *http.Request) (RandomNumberParams, error) {
 
 	// Check if this is a POST request
 	if r.Method == http.MethodPost {
-		// Parse the form data
-		if err := r.ParseForm(); err != nil {
-			return RandomNumberParams{}, fmt.Errorf("error parsing form data: %v", err)
-		}
+		// Check Content-Type header to determine how to parse the data
+		contentType := r.Header.Get("Content-Type")
 
-		// Get parameters from form data
-		minStr = r.FormValue("min")
-		maxStr = r.FormValue("max")
+		// If it's a form submission, parse form data
+		if strings.Contains(contentType, "application/x-www-form-urlencoded") || 
+		   strings.Contains(contentType, "multipart/form-data") {
+			// Parse the form data
+			if err := r.ParseForm(); err != nil {
+				return RandomNumberParams{}, fmt.Errorf("error parsing form data: %v", err)
+			}
+
+			// Get parameters from form data
+			minStr = r.FormValue("min")
+			maxStr = r.FormValue("max")
+		} else if strings.Contains(contentType, "application/json") {
+			// Parse JSON data
+			var params RandomNumberParams
+			decoder := json.NewDecoder(r.Body)
+			if err := decoder.Decode(&params); err != nil {
+				return RandomNumberParams{}, fmt.Errorf("error parsing JSON data: %v", err)
+			}
+			defer r.Body.Close()
+			
+			// If JSON values are provided, use them directly
+			if params.Min != 0 || params.Max != 0 {
+				return params, nil
+			}
+		} else {
+			// Default to form parsing for backward compatibility
+			if err := r.ParseForm(); err != nil {
+				return RandomNumberParams{}, fmt.Errorf("error parsing form data: %v", err)
+			}
+			minStr = r.FormValue("min")
+			maxStr = r.FormValue("max")
+		}
 	} else {
 		// Get parameters from query string
 		minStr = r.URL.Query().Get("min")

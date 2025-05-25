@@ -2,10 +2,12 @@
 package tools
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/CJFEdu/allmitools/server/internal/database"
 )
@@ -23,16 +25,51 @@ func ExecuteTextStorage(r *http.Request) (string, error) {
 
 	// Handle both GET and POST requests
 	if r.Method == http.MethodPost {
-		// Parse form data for POST requests
-		if err := r.ParseForm(); err != nil {
-			return "", fmt.Errorf("failed to parse form data: %w", err)
-		}
-		content = r.FormValue("content")
-		saveFlagStr := r.FormValue("save")
-		if saveFlagStr != "" {
-			saveFlag, err = strconv.ParseBool(saveFlagStr)
-			if err != nil {
-				return "", fmt.Errorf("invalid value for 'save' parameter: %w", err)
+		// Check Content-Type header to determine how to parse the data
+		contentType := r.Header.Get("Content-Type")
+
+		// If it's a form submission, parse form data
+		if strings.Contains(contentType, "application/x-www-form-urlencoded") || 
+		   strings.Contains(contentType, "multipart/form-data") {
+			// Parse form data for POST requests
+			if err := r.ParseForm(); err != nil {
+				return "", fmt.Errorf("failed to parse form data: %w", err)
+			}
+			content = r.FormValue("content")
+			saveFlagStr := r.FormValue("save")
+			if saveFlagStr != "" {
+				saveFlag, err = strconv.ParseBool(saveFlagStr)
+				if err != nil {
+					return "", fmt.Errorf("invalid value for 'save' parameter: %w", err)
+				}
+			}
+		} else if strings.Contains(contentType, "application/json") {
+			// Parse JSON data
+			var params struct {
+				Content string `json:"content"`
+				Save    bool   `json:"save"`
+			}
+			decoder := json.NewDecoder(r.Body)
+			if err := decoder.Decode(&params); err != nil {
+				return "", fmt.Errorf("failed to parse JSON data: %w", err)
+			}
+			defer r.Body.Close()
+			
+			// Use the values from JSON
+			content = params.Content
+			saveFlag = params.Save
+		} else {
+			// Default to form parsing for backward compatibility
+			if err := r.ParseForm(); err != nil {
+				return "", fmt.Errorf("failed to parse form data: %w", err)
+			}
+			content = r.FormValue("content")
+			saveFlagStr := r.FormValue("save")
+			if saveFlagStr != "" {
+				saveFlag, err = strconv.ParseBool(saveFlagStr)
+				if err != nil {
+					return "", fmt.Errorf("invalid value for 'save' parameter: %w", err)
+				}
 			}
 		}
 	} else {

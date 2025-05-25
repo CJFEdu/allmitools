@@ -4,9 +4,12 @@ package middleware
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gorilla/securecookie"
@@ -40,8 +43,36 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// Check if the user provided a password in the request
 		password := ""
 		if r.Method == http.MethodPost {
-			if err := r.ParseForm(); err == nil {
-				password = r.FormValue("password")
+			// Check Content-Type header to determine how to parse the data
+			contentType := r.Header.Get("Content-Type")
+
+			// If it's a form submission, parse form data
+			if strings.Contains(contentType, "application/x-www-form-urlencoded") || 
+			   strings.Contains(contentType, "multipart/form-data") {
+				if err := r.ParseForm(); err == nil {
+					password = r.FormValue("password")
+				}
+			} else if strings.Contains(contentType, "application/json") {
+				// Parse JSON data
+				var loginData struct {
+					Password string `json:"password"`
+				}
+
+				// Limit request body size to prevent DoS attacks
+				body, err := io.ReadAll(io.LimitReader(r.Body, 1024))
+				if err == nil {
+					defer r.Body.Close()
+
+					// Decode JSON
+					if err := json.Unmarshal(body, &loginData); err == nil {
+						password = loginData.Password
+					}
+				}
+			} else {
+				// Default to form parsing for backward compatibility
+				if err := r.ParseForm(); err == nil {
+					password = r.FormValue("password")
+				}
 			}
 		} else {
 			password = r.URL.Query().Get("password")

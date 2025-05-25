@@ -2,9 +2,11 @@
 package tools
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -84,14 +86,39 @@ func ParseDateFormatterParams(r *http.Request) (DateFormatterParams, error) {
 
 	// Check if this is a POST request
 	if r.Method == http.MethodPost {
-		// Parse the form data
-		if err := r.ParseForm(); err != nil {
-			return DateFormatterParams{}, fmt.Errorf("error parsing form data: %v", err)
-		}
+		// Check Content-Type header to determine how to parse the data
+		contentType := r.Header.Get("Content-Type")
 
-		// Get parameters from form data
-		format = r.FormValue("format")
-		offsetStr = r.FormValue("offset")
+		// If it's a form submission, parse form data
+		if strings.Contains(contentType, "application/x-www-form-urlencoded") || 
+		   strings.Contains(contentType, "multipart/form-data") {
+			// Parse the form data
+			if err := r.ParseForm(); err != nil {
+				return DateFormatterParams{}, fmt.Errorf("error parsing form data: %v", err)
+			}
+
+			// Get parameters from form data
+			format = r.FormValue("format")
+			offsetStr = r.FormValue("offset")
+		} else if strings.Contains(contentType, "application/json") {
+			// Parse JSON data
+			var params DateFormatterParams
+			decoder := json.NewDecoder(r.Body)
+			if err := decoder.Decode(&params); err != nil {
+				return DateFormatterParams{}, fmt.Errorf("error parsing JSON data: %v", err)
+			}
+			defer r.Body.Close()
+			
+			// Return the parsed parameters directly
+			return params, nil
+		} else {
+			// Default to form parsing for backward compatibility
+			if err := r.ParseForm(); err != nil {
+				return DateFormatterParams{}, fmt.Errorf("error parsing form data: %v", err)
+			}
+			format = r.FormValue("format")
+			offsetStr = r.FormValue("offset")
+		}
 	} else {
 		// Get parameters from query string
 		format = r.URL.Query().Get("format")

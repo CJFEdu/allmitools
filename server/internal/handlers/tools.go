@@ -153,13 +153,24 @@ func ToolsHandler(w http.ResponseWriter, r *http.Request) {
 	case "sha256-hasher":
 		result, toolErr = tools.ExecuteSHA256Hasher(r)
 	case "text-file":
-		// For the text file tool, we handle it differently as it needs to set special headers
-		if err := executeTextFileTool(w, r); err != nil {
+		// Special handling for text file tool (returns a file download)
+		fileContent, fileName, err := tools.ExecuteTextFile(r)
+		if err != nil {
+			// Return error as JSON
+			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(ToolResponse{
 				Success: false,
 				Error:   err.Error(),
 			})
+		} else {
+			// Set headers for file download
+			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+			w.Header().Set("Content-Type", "text/plain")
+			w.Header().Set("Content-Length", fmt.Sprintf("%d", len(fileContent)))
+
+			// Write the file content to the response
+			w.Write([]byte(fileContent))
 		}
 		return // Early return as we've already written the response
 	default:
@@ -247,51 +258,4 @@ func generateRawResponse(w http.ResponseWriter, result string) {
 	fmt.Fprintf(w, "%s", result)
 }
 
-// executeTextFileTool handles the text file tool which generates a downloadable text file
-// from the provided content
-func executeTextFileTool(w http.ResponseWriter, r *http.Request) error {
-	// Parse parameters from either POST or GET
-	var content, filename string
 
-	// Check if this is a POST request
-	if r.Method == http.MethodPost {
-		// Parse the form data
-		if err := r.ParseForm(); err != nil {
-			return fmt.Errorf("error parsing form data: %v", err)
-		}
-
-		// Get parameters from form data
-		content = r.FormValue("content")
-		filename = r.FormValue("filename")
-	} else {
-		// Get parameters from query string
-		content = r.URL.Query().Get("content")
-		filename = r.URL.Query().Get("filename")
-	}
-
-	// Validate parameters
-	if content == "" {
-		return fmt.Errorf("content parameter is required")
-	}
-
-	// Create parameters for the text file tool
-	params := tools.TextFileParams{
-		Content:  content,
-		Filename: filename,
-	}
-
-	// Generate text file
-	fileContent, fileName, err := tools.GenerateTextFile(params)
-	if err != nil {
-		return err
-	}
-
-	// Set headers for file download
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(fileContent)))
-
-	// Write the file content to the response
-	_, err = w.Write([]byte(fileContent))
-	return err
-}

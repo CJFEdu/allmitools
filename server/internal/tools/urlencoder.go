@@ -2,9 +2,11 @@
 package tools
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // URLEncoderParams represents the parameters for the URL encoder
@@ -28,13 +30,37 @@ func ParseURLEncoderParams(r *http.Request) (URLEncoderParams, error) {
 
 	// Check if this is a POST request
 	if r.Method == http.MethodPost {
-		// Parse the form data
-		if err := r.ParseForm(); err != nil {
-			return URLEncoderParams{}, fmt.Errorf("error parsing form data: %v", err)
-		}
+		// Check Content-Type header to determine how to parse the data
+		contentType := r.Header.Get("Content-Type")
 
-		// Get parameters from form data
-		text = r.FormValue("text")
+		// If it's a form submission, parse form data
+		if strings.Contains(contentType, "application/x-www-form-urlencoded") || 
+		   strings.Contains(contentType, "multipart/form-data") {
+			// Parse the form data
+			if err := r.ParseForm(); err != nil {
+				return URLEncoderParams{}, fmt.Errorf("error parsing form data: %v", err)
+			}
+
+			// Get parameters from form data
+			text = r.FormValue("text")
+		} else if strings.Contains(contentType, "application/json") {
+			// Parse JSON data
+			var params URLEncoderParams
+			decoder := json.NewDecoder(r.Body)
+			if err := decoder.Decode(&params); err != nil {
+				return URLEncoderParams{}, fmt.Errorf("error parsing JSON data: %v", err)
+			}
+			defer r.Body.Close()
+			
+			// Extract text from parsed JSON
+			text = params.Text
+		} else {
+			// Default to form parsing for backward compatibility
+			if err := r.ParseForm(); err != nil {
+				return URLEncoderParams{}, fmt.Errorf("error parsing form data: %v", err)
+			}
+			text = r.FormValue("text")
+		}
 	} else {
 		// Get parameters from query string
 		text = r.URL.Query().Get("text")

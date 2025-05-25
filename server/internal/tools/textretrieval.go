@@ -2,9 +2,11 @@
 package tools
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/CJFEdu/allmitools/server/internal/database"
 )
@@ -19,11 +21,37 @@ func ExecuteTextRetrieval(r *http.Request) (string, error) {
 
 	// Handle both GET and POST requests
 	if r.Method == http.MethodPost {
-		// Parse form data for POST requests
-		if err := r.ParseForm(); err != nil {
-			return "", fmt.Errorf("failed to parse form data: %w", err)
+		// Check Content-Type header to determine how to parse the data
+		contentType := r.Header.Get("Content-Type")
+
+		// If it's a form submission, parse form data
+		if strings.Contains(contentType, "application/x-www-form-urlencoded") || 
+		   strings.Contains(contentType, "multipart/form-data") {
+			// Parse form data for POST requests
+			if err := r.ParseForm(); err != nil {
+				return "", fmt.Errorf("failed to parse form data: %w", err)
+			}
+			id = r.FormValue("id")
+		} else if strings.Contains(contentType, "application/json") {
+			// Parse JSON data
+			var params struct {
+				ID string `json:"id"`
+			}
+			decoder := json.NewDecoder(r.Body)
+			if err := decoder.Decode(&params); err != nil {
+				return "", fmt.Errorf("failed to parse JSON data: %w", err)
+			}
+			defer r.Body.Close()
+			
+			// Use the ID from JSON
+			id = params.ID
+		} else {
+			// Default to form parsing for backward compatibility
+			if err := r.ParseForm(); err != nil {
+				return "", fmt.Errorf("failed to parse form data: %w", err)
+			}
+			id = r.FormValue("id")
 		}
-		id = r.FormValue("id")
 	} else {
 		// Parse query parameters for GET requests
 		id = r.URL.Query().Get("id")
