@@ -28,7 +28,7 @@ func TextStorageTool() PrivateToolInfo {
 				{
 					Name:        "content",
 					Description: "The text content to store",
-					Type:        "text",
+					Type:        "multiline",
 					Required:    true,
 					Default:     "",
 				},
