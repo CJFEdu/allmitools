@@ -12,7 +12,7 @@ type PrivateToolInfo struct {
 
 // AvailablePrivateTools is a map of available private tools
 var AvailablePrivateTools = map[string]PrivateToolInfo{
-	"text-storage": TextStorageTool(),
+	"text-storage":   TextStorageTool(),
 	"text-retrieval": TextRetrievalTool(),
 }
 
@@ -28,7 +28,7 @@ func TextStorageTool() PrivateToolInfo {
 				{
 					Name:        "content",
 					Description: "The text content to store",
-					Type:        "multiline",
+					Type:        "string",
 					Required:    true,
 					Default:     "",
 				},
