@@ -17,6 +17,8 @@
                 <input type="number" id="{{ .Name }}" name="{{ .Name }}" {{ if .Required }}required{{ end }} {{ if not .Required }}placeholder="Default: {{ .Default }}"{{ end }}>
             {{ else if eq .Type "bool" }}
                 <input type="checkbox" id="{{ .Name }}" name="{{ .Name }}" {{ if .Default }}checked{{ end }}>
+            {{ else if eq .Type "multiline" }}
+                <textarea id="{{ .Name }}" name="{{ .Name }}" rows="6" style="width: 100%;" {{ if .Required }}required{{ end }}>{{ if not .Required }}{{ .Default }}{{ end }}</textarea>
             {{ else }}
                 <input type="text" id="{{ .Name }}" name="{{ .Name }}" {{ if .Required }}required{{ end }} {{ if not .Required }}placeholder="Default: {{ .Default }}"{{ end }}>
             {{ end }}
